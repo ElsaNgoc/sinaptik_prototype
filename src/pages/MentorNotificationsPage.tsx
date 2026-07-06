@@ -6,6 +6,10 @@ import {
   getNotificationRoute,
   sortNotificationsByDate,
 } from '../utils/mockDataHelpers'
+import {
+  getNotificationTypeStyle,
+  NOTIFICATION_LEGEND_TYPES,
+} from '../utils/notificationStyles'
 import type { Notification } from '../types'
 
 type Tab = 'ALL' | 'MENTOR_REQUEST' | 'ASSIGNMENT_SUBMISSION'
@@ -21,10 +25,6 @@ function formatNotificationDate(isoDate: string) {
     day: 'numeric',
     month: 'short',
   })
-}
-
-function isUrgentNotification(notification: Notification) {
-  return notification.requiresAction && notification.type === 'MENTOR_REQUEST'
 }
 
 function SearchIcon() {
@@ -45,6 +45,25 @@ function SearchIcon() {
   )
 }
 
+function NotificationTypeLegend() {
+  return (
+    <div className="flex flex-wrap gap-3">
+      {NOTIFICATION_LEGEND_TYPES.map((type) => {
+        const style = getNotificationTypeStyle(type)
+        return (
+          <span
+            key={type}
+            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${style.badge}`}
+          >
+            <span className={`h-2 w-2 rounded-full ${style.dot}`} aria-hidden />
+            {style.label}
+          </span>
+        )
+      })}
+    </div>
+  )
+}
+
 function NotificationRow({
   notification,
   onRead,
@@ -52,20 +71,22 @@ function NotificationRow({
   notification: Notification
   onRead: (id: string) => void
 }) {
-  const urgent = isUrgentNotification(notification)
   const read = notification.read
+  const style = getNotificationTypeStyle(notification.type)
+  const showUrgent =
+    notification.requiresAction && notification.type === 'MENTOR_REQUEST'
 
   return (
     <Link
       to={getNotificationRoute(notification, notification.type)}
       onClick={() => onRead(notification.id)}
-      className={`grid grid-cols-1 gap-1 border-b border-stone-200 px-4 py-3.5 transition last:border-b-0 hover:z-10 hover:outline hover:outline-2 hover:outline-blue-500 hover:-outline-offset-2 md:grid-cols-[minmax(140px,1fr)_2fr_auto] md:items-center md:gap-6 ${
-        urgent ? 'bg-amber-100 hover:bg-amber-100' : 'bg-white hover:bg-white'
+      className={`grid grid-cols-1 gap-1 border-b border-stone-200 border-l-4 px-4 py-3.5 transition last:border-b-0 hover:z-10 hover:outline hover:outline-2 hover:outline-blue-500 hover:-outline-offset-2 md:grid-cols-[minmax(140px,1fr)_2fr_auto] md:items-center md:gap-6 ${style.border} ${style.rowBg} ${style.rowBgHover} ${
+        read ? 'opacity-45' : ''
       }`}
     >
       <div className="flex min-w-0 items-center gap-2">
-        {urgent && (
-          <span className="shrink-0 text-base font-bold leading-none text-stone-900">!</span>
+        {showUrgent && (
+          <span className="shrink-0 text-base font-bold leading-none text-amber-900">!</span>
         )}
         <span
           className={`truncate text-sm ${
@@ -73,6 +94,11 @@ function NotificationRow({
           }`}
         >
           {notification.learnerName}
+        </span>
+        <span
+          className={`hidden shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide sm:inline ${style.badge}`}
+        >
+          {style.label}
         </span>
       </div>
       <p className={`min-w-0 text-sm ${read ? 'text-stone-400' : 'text-stone-800'}`}>
@@ -112,6 +138,10 @@ export default function MentorNotificationsPage() {
     <div>
       <h1 className="page-title">Inbox</h1>
       <p className="page-subtitle">{actionCount} items require attention</p>
+
+      <div className="mt-4">
+        <NotificationTypeLegend />
+      </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-4">
         <div className="relative min-w-[220px] flex-1">
