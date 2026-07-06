@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import BackButton from '../components/BackButton'
 import { buildChatLearnerList } from '../utils/mockDataHelpers'
+import { resolveBackNavigation } from '../utils/taskNavigation'
 
 import NotificationBell from '../components/NotificationBell'
 
@@ -22,6 +23,7 @@ function ChatHeaderIcons() {
 export default function MentorChatPage() {
   const { data, conversations } = useApp()
   const { learnerId: paramLearnerId } = useParams<{ learnerId?: string }>()
+  const location = useLocation()
 
   const learnerList = useMemo(
     () => buildChatLearnerList(conversations, data.learners.filter((l) => l.assignedMentor.id === data.currentUser.id)),
@@ -37,10 +39,12 @@ export default function MentorChatPage() {
   const headerLabel =
     activeConversation?.courseLabel ?? activeLearner?.enrollmentLabel ?? 'Learner chat'
 
+  const back = resolveBackNavigation(location.state, '/mentor', 'Back to dashboard')
+
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-paper">
       <div className="flex shrink-0 items-center gap-4 border-b border-stone-300 px-4 py-3 md:px-6">
-        <BackButton to="/mentor" label="Back to dashboard" />
+        <BackButton to={back.to} label={back.label} />
         <h1 className="font-serif text-lg font-semibold text-stone-900">Chatbox</h1>
         <div className="ml-auto">
           <ChatHeaderIcons />

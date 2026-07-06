@@ -70,3 +70,10 @@ export const NOTIFICATION_LEGEND_TYPES: NotificationType[] = [
   'AI_ALERT',
   'SYSTEM',
 ]
+
+export const READ_NOTIFICATION_ROW = {
+  rowBg: 'bg-stone-50',
+  rowBgHover: 'hover:bg-stone-50',
+  border: 'border-l-stone-300',
+  badge: 'bg-stone-100 text-stone-500',
+} as const

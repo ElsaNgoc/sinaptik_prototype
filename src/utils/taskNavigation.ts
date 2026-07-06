@@ -3,6 +3,11 @@ export const TASKS_RETURN = {
   returnLabel: 'Back to tasks',
 } as const
 
+export const NOTIFICATIONS_RETURN = {
+  returnTo: '/mentor/notifications',
+  returnLabel: 'Back to inbox',
+} as const
+
 export type ReturnNavigationState = {
   returnTo?: string
   returnLabel?: string

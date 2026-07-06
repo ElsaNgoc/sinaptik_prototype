@@ -9,7 +9,9 @@ import {
 import {
   getNotificationTypeStyle,
   NOTIFICATION_LEGEND_TYPES,
+  READ_NOTIFICATION_ROW,
 } from '../utils/notificationStyles'
+import { NOTIFICATIONS_RETURN } from '../utils/taskNavigation'
 import type { Notification } from '../types'
 
 type Tab = 'ALL' | 'MENTOR_REQUEST' | 'ASSIGNMENT_SUBMISSION'
@@ -72,17 +74,17 @@ function NotificationRow({
   onRead: (id: string) => void
 }) {
   const read = notification.read
-  const style = getNotificationTypeStyle(notification.type)
+  const typeStyle = getNotificationTypeStyle(notification.type)
+  const rowStyle = read ? READ_NOTIFICATION_ROW : typeStyle
   const showUrgent =
-    notification.requiresAction && notification.type === 'MENTOR_REQUEST'
+    !read && notification.requiresAction && notification.type === 'MENTOR_REQUEST'
 
   return (
     <Link
       to={getNotificationRoute(notification, notification.type)}
+      state={NOTIFICATIONS_RETURN}
       onClick={() => onRead(notification.id)}
-      className={`grid grid-cols-1 gap-1 border-b border-stone-200 border-l-4 px-4 py-3.5 transition last:border-b-0 hover:z-10 hover:outline hover:outline-2 hover:outline-blue-500 hover:-outline-offset-2 md:grid-cols-[minmax(140px,1fr)_2fr_auto] md:items-center md:gap-6 ${style.border} ${style.rowBg} ${style.rowBgHover} ${
-        read ? 'opacity-45' : ''
-      }`}
+      className={`grid grid-cols-1 gap-1 border-b border-stone-200 border-l-4 px-4 py-3.5 transition last:border-b-0 hover:z-10 hover:outline hover:outline-2 hover:outline-blue-500 hover:-outline-offset-2 md:grid-cols-[minmax(140px,1fr)_2fr_auto] md:items-center md:gap-6 ${rowStyle.border} ${rowStyle.rowBg} ${rowStyle.rowBgHover}`}
     >
       <div className="flex min-w-0 items-center gap-2">
         {showUrgent && (
@@ -90,16 +92,18 @@ function NotificationRow({
         )}
         <span
           className={`truncate text-sm ${
-            read ? 'font-normal text-stone-400' : 'font-semibold text-stone-900'
+            read ? 'font-normal text-stone-500' : 'font-semibold text-stone-900'
           }`}
         >
           {notification.learnerName}
         </span>
-        <span
-          className={`hidden shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide sm:inline ${style.badge}`}
-        >
-          {style.label}
-        </span>
+        {!read && (
+          <span
+            className={`hidden shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide sm:inline ${typeStyle.badge}`}
+          >
+            {typeStyle.label}
+          </span>
+        )}
       </div>
       <p className={`min-w-0 text-sm ${read ? 'text-stone-400' : 'text-stone-800'}`}>
         {notification.message}

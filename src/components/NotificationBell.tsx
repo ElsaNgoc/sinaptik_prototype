@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { getNotificationRoute, getRecentNotifications } from '../utils/mockDataHelpers'
-import { getNotificationTypeStyle } from '../utils/notificationStyles'
+import { getNotificationTypeStyle, READ_NOTIFICATION_ROW } from '../utils/notificationStyles'
+import { NOTIFICATIONS_RETURN } from '../utils/taskNavigation'
 import type { Notification } from '../types'
 
 function BellIcon() {
@@ -44,7 +45,9 @@ export default function NotificationBell() {
   const handleSelect = (notification: Notification) => {
     markNotificationRead(notification.id)
     setOpen(false)
-    navigate(getNotificationRoute(notification, notification.type))
+    navigate(getNotificationRoute(notification, notification.type), {
+      state: NOTIFICATIONS_RETURN,
+    })
   }
 
   return (
@@ -74,23 +77,26 @@ export default function NotificationBell() {
           ) : (
             <ul className="max-h-80 divide-y divide-stone-100 overflow-y-auto">
               {recent.map((n) => {
-                const style = getNotificationTypeStyle(n.type)
+                const typeStyle = getNotificationTypeStyle(n.type)
+                const rowStyle = n.read ? READ_NOTIFICATION_ROW : typeStyle
                 return (
                 <li key={n.id}>
                   <button
                     type="button"
                     onClick={() => handleSelect(n)}
-                    className={`w-full border-l-4 px-4 py-3 text-left transition ${style.border} ${style.rowBg} hover:brightness-95 ${
-                      n.read ? 'opacity-45' : ''
+                    className={`w-full border-l-4 px-4 py-3 text-left transition ${rowStyle.border} ${rowStyle.rowBg} ${
+                      n.read ? 'hover:bg-stone-50' : 'hover:brightness-95'
                     }`}
                   >
                     <div className="flex items-center gap-2">
                       <p className={`text-sm font-medium ${n.read ? 'text-stone-500' : 'text-stone-900'}`}>
                         {n.learnerName}
                       </p>
-                      <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${style.badge}`}>
-                        {style.label}
-                      </span>
+                      {!n.read && (
+                        <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${typeStyle.badge}`}>
+                          {typeStyle.label}
+                        </span>
+                      )}
                     </div>
                     <p className={`mt-0.5 line-clamp-2 text-xs ${n.read ? 'text-stone-400' : 'text-stone-700'}`}>
                       {n.message}

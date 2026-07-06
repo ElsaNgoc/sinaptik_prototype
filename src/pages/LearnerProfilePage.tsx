@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import BackButton from '../components/BackButton'
+import { resolveBackNavigation } from '../utils/taskNavigation'
 import StatusBadge from '../components/StatusBadge'
 import LearnerInsightChart from '../components/charts/LearnerInsightChart'
 import ModuleHistoryChart from '../components/charts/ModuleHistoryChart'
@@ -44,6 +45,7 @@ export default function LearnerProfilePage() {
   const { learnerId } = useParams<{ learnerId: string }>()
   const { data, reviewRequests, getSubmission } = useApp()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const learner = data.learners.find((l) => l.id === learnerId)
   const submission = learnerId ? getSubmission(learnerId) : undefined
@@ -74,9 +76,11 @@ export default function LearnerProfilePage() {
     learner.moduleHistory.find((m) => m.status === 'IN_PROGRESS') ??
     completedModules[completedModules.length - 1]
 
+  const back = resolveBackNavigation(location.state, '/mentor/learners', 'Back to learners')
+
   return (
     <div>
-      <BackButton to="/mentor/learners" label="Back to learners" />
+      <BackButton to={back.to} label={back.label} />
 
       <div className="mt-6 flex flex-wrap items-start gap-6">
         <div className="min-w-0 flex-1">
