@@ -29,6 +29,8 @@ export interface Learner {
   avatar: string
   status: LearnerStatus
   currentModule: string
+  enrollmentLabel: string
+  programId: string
   assignedMentor: { id: string; avatar: string; name: string }
   moduleProgress: number
   totalModules: number
@@ -38,6 +40,79 @@ export interface Learner {
   dropOffRisk: DropOffRisk
   skills: SkillProgress[]
   moduleHistory: LearnerModule[]
+}
+
+export type TaskType = 'SUBMISSION' | 'REVIEW_REQUEST'
+export type TaskStatus = 'PENDING' | 'COMPLETED'
+
+export interface MentorTask {
+  id: string
+  type: TaskType
+  courseId: string
+  courseName: string
+  moduleTitle: string
+  assignmentTitle: string
+  learnerId: string
+  learnerName: string
+  submissionId?: string
+  reviewRequestId?: string
+  dueDate: string
+  status: TaskStatus
+  submittedAt?: string
+}
+
+export type NotificationType =
+  | 'AI_ALERT'
+  | 'MENTOR_REQUEST'
+  | 'SUBMISSION'
+  | 'SYSTEM'
+  | 'CHAT'
+
+export interface Notification {
+  id: string
+  type: NotificationType
+  learnerId: string
+  learnerName: string
+  message: string
+  date: string
+  read: boolean
+  requiresAction: boolean
+  submissionId?: string
+  reviewRequestId?: string
+}
+
+export interface NavBadges {
+  dashboard: number
+  tasks: number
+  notifications: number
+}
+
+export interface ChatMessage {
+  id: string
+  senderId: string
+  senderRole: 'MENTOR' | 'LEARNER'
+  text: string
+  timestamp: string
+}
+
+export interface ChatConversation {
+  id: string
+  learnerId: string
+  learnerName: string
+  courseLabel: string
+  lastMessage: string
+  lastMessageAt: string
+  unreadCount: number
+  messages: ChatMessage[]
+}
+
+export interface ReviewRequest {
+  id: string
+  learnerId: string
+  submissionId: string
+  studentMessage: string
+  status: 'OPEN' | 'RESOLVED'
+  createdAt: string
 }
 
 export interface ActivityLog {
@@ -52,7 +127,9 @@ export interface ActivityLog {
 export interface Submission {
   id: string
   learnerId: string
+  courseId: string
   moduleTitle: string
+  assignmentTitle: string
   content: string
   aiScore: number
   aiFeedback: string
@@ -105,9 +182,15 @@ export interface InContextComment {
 export interface AppData {
   currentUser: User
   cohort: Cohort
+  mentorCourseIds: string[]
+  navBadges: NavBadges
   dashboardAnalytics: DashboardAnalytics
   learners: Learner[]
   submissions: Submission[]
+  tasks: MentorTask[]
+  notifications: Notification[]
+  reviewRequests: ReviewRequest[]
+  conversations: ChatConversation[]
   activityLogs: ActivityLog[]
   learnerSession: {
     currentUser: User

@@ -107,7 +107,7 @@ export const mentors: Mentor[] = [
     title: 'Leadership & Management',
     field: 'leadership',
     avatar: 'https://i.pravatar.cc/150?u=puja',
-    programs: ['bootcamp-da', 'leadership-essentials', 'leadership-advanced'],
+    programs: ['bootcamp-da', 'bootcamp-ds-5', 'leadership-essentials', 'leadership-advanced'],
   },
   {
     id: 'm2',
@@ -191,6 +191,23 @@ export const programs: Program[] = [
       { id: 'mod4', title: 'Module 4: Data Cleaning & Wrangling' },
       { id: 'mod5', title: 'Module 5: Data Visualization' },
       { id: 'mod6', title: 'Module 6: Machine Learning Basics' },
+    ],
+  },
+  {
+    id: 'bootcamp-ds-5',
+    fieldId: 'data-analytics',
+    name: 'Data Science — Batch 5 (2026)',
+    description:
+      'Applied data science program covering collection, cleaning, modeling, and deployment.',
+    durationWeeks: 14,
+    mentorId: 'm1',
+    modules: [
+      { id: 'ds1', title: 'Module 1: Python Foundations' },
+      { id: 'ds2', title: 'Module 2: Statistics for Data Science' },
+      { id: 'ds3', title: 'Module 3: Pandas & EDA' },
+      { id: 'ds4', title: 'Module 4: Data Collection & Data Cleaning' },
+      { id: 'ds5', title: 'Module 5: Feature Engineering' },
+      { id: 'ds6', title: 'Module 6: Model Building' },
     ],
   },
   {

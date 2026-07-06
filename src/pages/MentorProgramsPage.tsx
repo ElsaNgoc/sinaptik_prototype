@@ -24,7 +24,8 @@ export default function MentorProgramsPage() {
               <div className="mt-4 space-y-4">
                 {fieldPrograms.map((prog) => {
                   const mentor = getMentorById(prog.mentorId)
-                  const isActive = prog.id === data.cohort.programId
+                  const isActive =
+                    data.mentorCourseIds.includes(prog.id) || prog.id === data.cohort.programId
 
                   return (
                     <article key={prog.id} className="card border-stone-300 p-6">

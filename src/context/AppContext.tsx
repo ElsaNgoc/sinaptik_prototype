@@ -2,7 +2,17 @@ import { createContext, useContext, useState, useCallback, useMemo, type ReactNo
 import rawData from '../../mock_data.json'
 import { generateLearners, computeStatusBreakdown } from '../data/generateLearners'
 import { mentors, programs, fields, skillTests } from '../data/sinaptikCatalog'
-import type { AppData, Learner, LearnerStatus, ActivityLog, DashboardAnalytics } from '../types'
+import type {
+  AppData,
+  Learner,
+  LearnerStatus,
+  ActivityLog,
+  DashboardAnalytics,
+  MentorTask,
+  Notification,
+  ChatConversation,
+  ReviewRequest,
+} from '../types'
 
 interface AppState extends Omit<AppData, 'learners' | 'dashboardAnalytics'> {
   learners: Learner[]
@@ -18,9 +28,14 @@ interface AppContextValue {
   programs: typeof programs
   fields: typeof fields
   skillTests: typeof skillTests
+  tasks: MentorTask[]
+  notifications: Notification[]
+  conversations: ChatConversation[]
+  reviewRequests: ReviewRequest[]
   testResults: Record<string, number>
   saveTestResult: (testId: string, score: number) => void
-  getSubmission: (learnerId: string) => AppData['submissions'][0] | undefined
+  getSubmission: (learnerId: string, submissionId?: string) => AppData['submissions'][0] | undefined
+  getSubmissionById: (submissionId: string) => AppData['submissions'][0] | undefined
   updateLearnerStatus: (learnerId: string, status: LearnerStatus) => void
   submitMentorRequest: (reason: string) => void
   acceptFeedback: () => void
@@ -53,10 +68,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setTestResults((prev) => ({ ...prev, [testId]: score }))
   }, [])
 
+  const submissions = rawData.submissions as AppData['submissions']
+
+  const getSubmissionById = useCallback(
+    (submissionId: string) => submissions.find((s) => s.id === submissionId),
+    [submissions]
+  )
+
   const getSubmission = useCallback(
-    (learnerId: string) =>
-      (rawData.submissions as AppData['submissions']).find((s) => s.learnerId === learnerId),
-    []
+    (learnerId: string, submissionId?: string) => {
+      if (submissionId) return getSubmissionById(submissionId)
+      return submissions.find((s) => s.learnerId === learnerId)
+    },
+    [submissions, getSubmissionById]
   )
 
   const updateLearnerStatus = useCallback((learnerId: string, status: LearnerStatus) => {
@@ -120,9 +144,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         programs,
         fields,
         skillTests,
+        tasks: rawData.tasks as MentorTask[],
+        notifications: rawData.notifications as Notification[],
+        conversations: rawData.conversations as ChatConversation[],
+        reviewRequests: rawData.reviewRequests as ReviewRequest[],
         testResults,
         saveTestResult,
         getSubmission,
+        getSubmissionById,
         updateLearnerStatus,
         submitMentorRequest,
         acceptFeedback,

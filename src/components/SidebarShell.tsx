@@ -12,6 +12,7 @@ interface SidebarShellProps {
   subtitle: string
   navItems: SidebarNavItem[]
   user: { name: string; avatar: string; role: string }
+  header?: React.ReactNode
   footer?: React.ReactNode
 }
 
@@ -20,6 +21,7 @@ export default function SidebarShell({
   subtitle,
   navItems,
   user,
+  header,
   footer,
 }: SidebarShellProps) {
   return (
@@ -64,6 +66,7 @@ export default function SidebarShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
+        {header}
         <main className="flex-1 px-6 py-8 md:px-10 md:py-10">
           <Outlet />
         </main>

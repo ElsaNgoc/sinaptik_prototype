@@ -50,11 +50,11 @@ export function getStatusLabel(status: LearnerStatus): string {
 
 export function getStatusColor(status: LearnerStatus): string {
   const colors: Record<LearnerStatus, string> = {
-    ON_TRACK: 'bg-stone-100 text-stone-800 border-stone-400',
-    PENDING_MENTOR: 'bg-stone-100 text-stone-800 border-stone-500',
-    AT_RISK: 'bg-stone-100 text-stone-800 border-stone-600',
-    STUCK: 'bg-stone-100 text-stone-900 border-stone-700',
-    COMPLETED: 'bg-stone-100 text-stone-800 border-accent',
+    ON_TRACK: 'bg-white text-stone-800 border-stone-400',
+    PENDING_MENTOR: 'bg-amber-100 text-amber-950 border-amber-400',
+    AT_RISK: 'bg-red-100 text-red-900 border-red-400',
+    STUCK: 'bg-red-100 text-red-950 border-red-500',
+    COMPLETED: 'bg-emerald-100 text-emerald-900 border-emerald-500',
   }
   return colors[status]
 }

@@ -1,16 +1,17 @@
 import { useApp } from '../context/AppContext'
 import SidebarShell from './SidebarShell'
+import MentorHeader from './MentorHeader'
 
 export default function MentorLayout() {
   const { data } = useApp()
-  const pendingCount = data.learners.filter((l) => l.status === 'PENDING_MENTOR').length
-  const alertCount = data.activityLogs.filter((l) => l.requiresAction).length
+  const { navBadges } = data
 
   const navItems = [
-    { to: '/mentor', label: 'Command center', end: true, badge: pendingCount || undefined },
-    { to: '/mentor/learners', label: 'All learners' },
+    { to: '/mentor', label: 'Dashboard', end: true, badge: navBadges.dashboard },
+    { to: '/mentor/tasks', label: 'Tasks', badge: navBadges.tasks },
+    { to: '/mentor/learners', label: 'Learners' },
+    { to: '/mentor/notifications', label: 'Notifications', badge: navBadges.notifications },
     { to: '/mentor/programs', label: 'Course catalog' },
-    { to: '/mentor/alerts', label: 'Alerts & actions', badge: alertCount || undefined },
   ]
 
   return (
@@ -18,6 +19,7 @@ export default function MentorLayout() {
       title="Sinaptik"
       subtitle="Mentor portal"
       navItems={navItems}
+      header={<MentorHeader />}
       user={{
         name: data.currentUser.name,
         avatar: data.currentUser.avatar,
