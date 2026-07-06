@@ -300,7 +300,8 @@ function StructureQuestionCard({
 
 export default function MarkingPage() {
   const { submissionId } = useParams<{ submissionId: string }>()
-  const { data, getSubmissionById, resolveSubmission, completeTaskBySubmission } = useApp()
+  const { data, getSubmissionById, resolveSubmission, completeTaskBySubmission, saveSubmissionMentorGrading } =
+    useApp()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -368,7 +369,34 @@ export default function MarkingPage() {
     })
 
   const handleMark = () => {
-    if (!learner || !submission || !allStructureScored) return
+    if (!learner || !submission || !allStructureScored || !quiz) return
+
+    const structureTotal = quiz.structure.reduce((sum, q) => {
+      const n = Number(structureScores[q.id])
+      return sum + (Number.isNaN(n) ? 0 : n)
+    }, 0)
+    const structureMax = quiz.structure.reduce((sum, q) => sum + q.maxScore, 0)
+
+    const allComments = quiz.structure.flatMap((q) => structureComments[q.id] ?? [])
+    const generalComment = allComments.find((c) => !c.selectedText)
+    const mentorFeedback =
+      generalComment?.text ??
+      allComments[0]?.text ??
+      'Marked — see comments on structure questions.'
+
+    saveSubmissionMentorGrading(submission.id, {
+      mentorScore: structureTotal,
+      mentorScoreMax: structureMax,
+      mentorFeedback,
+      mentorComments: allComments.map((c) => ({
+        id: c.id,
+        text: c.text,
+        selectedText: c.selectedText || undefined,
+        authorName: c.authorName,
+        createdAt: c.createdAt,
+      })),
+    })
+
     resolveSubmission(learner.id)
     completeTaskBySubmission(submission.id)
     navigate('/mentor/tasks')

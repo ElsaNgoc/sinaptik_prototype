@@ -113,8 +113,16 @@ export interface ReviewRequest {
   studentMessage: string
   status: 'OPEN' | 'RESOLVED'
   createdAt: string
-  mentorScore?: number
-  mentorFeedback?: string
+  /** Mentor's reply to this review request (not the original marking feedback). */
+  reviewResponse?: string
+}
+
+export interface SubmissionMentorComment {
+  id: string
+  text: string
+  selectedText?: string
+  authorName: string
+  createdAt: string
 }
 
 export interface ActivityLog {
@@ -136,6 +144,11 @@ export interface Submission {
   aiScore: number
   aiFeedback: string
   submittedAt: string
+  mentorScore?: number
+  mentorScoreMax?: number
+  mentorFeedback?: string
+  mentorComments?: SubmissionMentorComment[]
+  mentorMarkedAt?: string
 }
 
 export interface McqOption {

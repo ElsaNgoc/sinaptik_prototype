@@ -67,6 +67,19 @@
       "content": "import pandas as pd\n\ndata = pd.read_csv('sales.csv')\n# Dropping all null rows\ndata.dropna(inplace=True)\n\nprint(data.describe())",
       "aiScore": 45,
       "aiFeedback": "Warning: Using dropna() removed 40% of the data. For this financial dataset, consider imputation (e.g. median) to preserve data integrity.",
+      "mentorScore": 6,
+      "mentorScoreMax": 10,
+      "mentorFeedback": "@Sari Dewi — dropping 40% of rows is risky here. Try median imputation for numeric columns and explain your choice in the structure answer.",
+      "mentorComments": [
+        {
+          "id": "mc-sub1-1",
+          "text": "@Sari Dewi consider fillna() with the column median instead of dropna() for this financial dataset.",
+          "selectedText": "data.dropna(inplace=True)",
+          "authorName": "Puja Pramudya",
+          "createdAt": "2026-06-26T11:00:00+07:00"
+        }
+      ],
+      "mentorMarkedAt": "2026-06-26T11:00:00+07:00",
       "submittedAt": "2026-06-26T10:18:00+07:00"
     },
     {
@@ -133,6 +146,19 @@
       "content": "import pandas as pd\ndf = pd.read_csv('customers.csv')\nprint(df.head())",
       "aiScore": 45,
       "aiFeedback": "Submission is too shallow for EDA. Add summary statistics and at least one visualization.",
+      "mentorScore": 4,
+      "mentorScoreMax": 10,
+      "mentorFeedback": "EDA needs more than head() — add describe(), check missing values, and include at least one visualization.",
+      "mentorComments": [
+        {
+          "id": "mc-sub7-1",
+          "text": "@Yoga Pratama head() alone is not enough for a first-pass EDA. Add df.describe() and note any data quality issues.",
+          "selectedText": "print(df.head())",
+          "authorName": "Puja Pramudya",
+          "createdAt": "2026-06-30T14:00:00+07:00"
+        }
+      ],
+      "mentorMarkedAt": "2026-06-30T14:00:00+07:00",
       "submittedAt": "2026-06-30T13:10:00+07:00"
     },
     {
@@ -155,6 +181,19 @@
       "content": "import pandas as pd\ndf = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})\nprint(df.loc[0])\nprint(df.iloc[0])",
       "aiScore": 58,
       "aiFeedback": "Output is correct but review loc vs iloc rules — label-based vs position-based indexing.",
+      "mentorScore": 7,
+      "mentorScoreMax": 10,
+      "mentorFeedback": "Your loc/iloc outputs are correct, but review when to use labels vs integer positions — this will keep coming up on Quiz 3.",
+      "mentorComments": [
+        {
+          "id": "mc-sub9-1",
+          "text": "@Andi Santoso remember: loc uses labels, iloc uses positions. Mixing them up is a common Quiz 3 mistake.",
+          "selectedText": "print(df.loc[0])",
+          "authorName": "Puja Pramudya",
+          "createdAt": "2026-07-01T08:30:00+07:00"
+        }
+      ],
+      "mentorMarkedAt": "2026-07-01T08:30:00+07:00",
       "submittedAt": "2026-07-01T08:00:00+07:00"
     }
   ],
@@ -297,8 +336,7 @@
       "studentMessage": "Can you explain the difference between loc and iloc? I keep mixing them up on Quiz 3.",
       "status": "RESOLVED",
       "createdAt": "2026-07-01T08:05:00+07:00",
-      "mentorScore": 72,
-      "mentorFeedback": "loc selects by row/column labels (e.g. df.loc[0, 'name']). iloc selects by integer position (e.g. df.iloc[0, 1]). Quiz 3 mixes both — label the index when you use loc and use numbers only with iloc."
+      "reviewResponse": "loc selects by row/column labels (e.g. df.loc[0, 'name']). iloc selects by integer position (e.g. df.iloc[0, 1]). Quiz 3 mixes both — label the index when you use loc and use numbers only with iloc."
     }
   ],
   "notifications": [

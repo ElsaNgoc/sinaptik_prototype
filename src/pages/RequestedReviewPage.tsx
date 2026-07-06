@@ -108,6 +108,10 @@ export default function RequestedReviewPage() {
     `Back to ${learner.name}`
   )
 
+  const hasPriorMentorGrading = submission.mentorScore !== undefined
+  const scoreMax = submission.mentorScoreMax ?? 10
+  const priorComments = submission.mentorComments ?? []
+
   return (
     <div>
       <BackButton to={back.to} label={back.label} />
@@ -117,7 +121,7 @@ export default function RequestedReviewPage() {
         {submission.assignmentTitle} · {submission.moduleTitle} · {learner.name}
       </p>
       <p className="mt-1 text-sm text-stone-600">
-        Reply with comments on the student&apos;s work — they receive your mentor feedback directly.
+        The student is asking about your earlier marking feedback — reply below.
       </p>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-3">
@@ -151,37 +155,99 @@ export default function RequestedReviewPage() {
             </div>
           </section>
 
+          <section className="card border-stone-300 p-6">
+            <h2 className="section-title">Prior mentor feedback</h2>
+            <p className="mt-1 text-xs text-stone-500">
+              From your structure-question marking — what the student saw before escalating.
+            </p>
+
+            {hasPriorMentorGrading ? (
+              <div className="mt-4 space-y-4">
+                <div className="rounded-md border border-stone-200 bg-stone-50 p-4">
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-serif text-2xl font-semibold text-stone-900">
+                      {submission.mentorScore}
+                    </span>
+                    <span className="text-sm text-stone-500">/ {scoreMax}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-stone-500">{data.currentUser.name}</p>
+                  {submission.mentorFeedback && (
+                    <p className="mt-3 text-sm leading-relaxed text-stone-800">
+                      {submission.mentorFeedback}
+                    </p>
+                  )}
+                </div>
+
+                {priorComments.length > 0 && (
+                  <ul className="space-y-2">
+                    {priorComments.map((c) => (
+                      <li key={c.id} className="rounded-md border border-stone-200 bg-white p-3">
+                        <p className="text-xs text-stone-500">
+                          {c.authorName}
+                          {c.selectedText && (
+                            <>
+                              {' '}
+                              · On &quot;{c.selectedText.slice(0, 40)}
+                              {c.selectedText.length > 40 ? '…' : ''}&quot;
+                            </>
+                          )}
+                        </p>
+                        <p className="mt-1 text-sm text-stone-800">{renderCommentText(c.text)}</p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ) : (
+              <p className="mt-4 text-sm text-stone-500">
+                No mentor marking on record yet. Grade the submission on the Marking page first.
+              </p>
+            )}
+          </section>
+
           <section className="card border-amber-300 bg-amber-50/40 p-6">
             <h2 className="section-title">Student question</h2>
             <p className="mt-3 text-sm leading-relaxed text-stone-800">{request.studentMessage}</p>
+            <p className="mt-2 text-xs text-stone-500">
+              {learner.name} ·{' '}
+              {new Date(request.createdAt).toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+              })}
+            </p>
           </section>
 
-          {!isResolved && (
-            <section className="card border-stone-300 p-4">
-              <h2 className="section-title">Mentor response</h2>
-              <p className="mt-1 text-xs text-stone-600">
-                Highlight text above or type @ to tag {learner.name}.
-              </p>
-              <div className="mt-4">
-                <CommentBox
-                  mentionables={mentionables}
-                  author={data.currentUser}
-                  placeholder={`Answer @${learner.name} about their submission...`}
-                  onSubmit={(text, mentions) => addComment(text, mentions)}
-                />
+          <section className="card border-stone-300 p-6">
+            <h2 className="section-title">Mentor response</h2>
+            {isResolved && request.reviewResponse ? (
+              <div className="mt-4 rounded-md border border-stone-200 bg-stone-50 p-4">
+                <p className="text-xs text-stone-500">{data.currentUser.name} · Resolved</p>
+                <p className="mt-2 text-sm leading-relaxed text-stone-800">
+                  {request.reviewResponse}
+                </p>
               </div>
-            </section>
-          )}
+            ) : (
+              <>
+                <p className="mt-1 text-xs text-stone-600">
+                  Highlight text in the submission or type @ to tag {learner.name}.
+                </p>
+                <div className="mt-4">
+                  <CommentBox
+                    mentionables={mentionables}
+                    author={data.currentUser}
+                    placeholder={`Answer @${learner.name} about their question...`}
+                    onSubmit={(text, mentions) => addComment(text, mentions)}
+                  />
+                </div>
+              </>
+            )}
+          </section>
         </div>
 
         <section className="card h-fit border-stone-300 p-6 lg:col-span-1">
           <h2 className="section-title">Comments ({comments.length})</h2>
-          {isResolved && request.mentorFeedback ? (
-            <div className="mt-4 border border-stone-200 p-3">
-              <p className="text-xs text-stone-500">{data.currentUser.name}</p>
-              <p className="mt-1 text-sm text-stone-800">{request.mentorFeedback}</p>
-            </div>
-          ) : comments.length === 0 ? (
+          {comments.length === 0 ? (
             <p className="mt-4 text-sm text-stone-500">No comments yet.</p>
           ) : (
             <ul className="mt-4 space-y-3">

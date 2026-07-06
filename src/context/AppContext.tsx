@@ -12,6 +12,8 @@ import type {
   Notification,
   ChatConversation,
   ReviewRequest,
+  Submission,
+  SubmissionMentorComment,
 } from '../types'
 
 interface AppState extends Omit<AppData, 'learners' | 'dashboardAnalytics'> {
@@ -37,6 +39,15 @@ interface AppContextValue {
   toggleTaskStatus: (taskId: string) => void
   completeTaskBySubmission: (submissionId: string) => void
   completeTaskByReviewRequest: (reviewRequestId: string) => void
+  saveSubmissionMentorGrading: (
+    submissionId: string,
+    grading: {
+      mentorScore: number
+      mentorScoreMax: number
+      mentorFeedback: string
+      mentorComments: SubmissionMentorComment[]
+    }
+  ) => void
   saveTestResult: (testId: string, score: number) => void
   getSubmission: (learnerId: string, submissionId?: string) => AppData['submissions'][0] | undefined
   getSubmissionById: (submissionId: string) => AppData['submissions'][0] | undefined
@@ -63,6 +74,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     rawData.notifications as Notification[]
   )
   const [tasks, setTasks] = useState<MentorTask[]>(rawData.tasks as MentorTask[])
+  const [submissions, setSubmissions] = useState<Submission[]>(
+    rawData.submissions as Submission[]
+  )
 
   const dashboardAnalytics = useMemo(
     (): DashboardAnalytics => ({
@@ -108,7 +122,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
     )
   }, [])
 
-  const submissions = rawData.submissions as AppData['submissions']
+  const saveSubmissionMentorGrading = useCallback(
+    (
+      submissionId: string,
+      grading: {
+        mentorScore: number
+        mentorScoreMax: number
+        mentorFeedback: string
+        mentorComments: SubmissionMentorComment[]
+      }
+    ) => {
+      setSubmissions((prev) =>
+        prev.map((s) =>
+          s.id === submissionId
+            ? {
+                ...s,
+                mentorScore: grading.mentorScore,
+                mentorScoreMax: grading.mentorScoreMax,
+                mentorFeedback: grading.mentorFeedback,
+                mentorComments: grading.mentorComments,
+                mentorMarkedAt: new Date().toISOString(),
+              }
+            : s
+        )
+      )
+    },
+    []
+  )
 
   const getSubmissionById = useCallback(
     (submissionId: string) => submissions.find((s) => s.id === submissionId),
@@ -168,6 +208,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const data: AppState = {
     ...(rawData as AppData),
+    submissions,
     learners,
     activityLogs,
     dashboardAnalytics,
@@ -194,6 +235,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         toggleTaskStatus,
         completeTaskBySubmission,
         completeTaskByReviewRequest,
+        saveSubmissionMentorGrading,
         getSubmission,
         getSubmissionById,
         updateLearnerStatus,
