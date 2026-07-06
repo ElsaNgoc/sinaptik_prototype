@@ -76,8 +76,6 @@ function NotificationRow({
   const read = notification.read
   const typeStyle = getNotificationTypeStyle(notification.type)
   const rowStyle = read ? READ_NOTIFICATION_ROW : typeStyle
-  const showUrgent =
-    !read && notification.requiresAction && notification.type === 'MENTOR_REQUEST'
 
   return (
     <Link
@@ -87,9 +85,6 @@ function NotificationRow({
       className={`grid grid-cols-1 gap-1 border-b border-stone-200 border-l-4 px-4 py-3.5 transition last:border-b-0 hover:z-10 hover:outline hover:outline-2 hover:outline-blue-500 hover:-outline-offset-2 md:grid-cols-[minmax(140px,1fr)_2fr_auto] md:items-center md:gap-6 ${rowStyle.border} ${rowStyle.rowBg} ${rowStyle.rowBgHover}`}
     >
       <div className="flex min-w-0 items-center gap-2">
-        {showUrgent && (
-          <span className="shrink-0 text-base font-bold leading-none text-amber-900">!</span>
-        )}
         <span
           className={`truncate text-sm ${
             read ? 'font-normal text-stone-500' : 'font-semibold text-stone-900'

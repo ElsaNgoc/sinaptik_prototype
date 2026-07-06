@@ -138,6 +138,33 @@ export interface Submission {
   submittedAt: string
 }
 
+export interface McqOption {
+  id: string
+  label: string
+}
+
+export interface McqQuestion {
+  id: string
+  number: number
+  prompt: string
+  options: McqOption[]
+  correctOptionId: string
+  selectedOptionId: string
+}
+
+export interface StructureQuestion {
+  id: string
+  number: number
+  prompt: string
+  answer: string
+  maxScore: number
+}
+
+export interface MarkingQuiz {
+  multipleChoice: McqQuestion[]
+  structure: StructureQuestion[]
+}
+
 export interface Cohort {
   id: string
   name: string
