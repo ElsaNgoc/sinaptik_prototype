@@ -34,6 +34,9 @@ interface AppContextValue {
   reviewRequests: ReviewRequest[]
   testResults: Record<string, number>
   markNotificationRead: (notificationId: string) => void
+  toggleTaskStatus: (taskId: string) => void
+  completeTaskBySubmission: (submissionId: string) => void
+  completeTaskByReviewRequest: (reviewRequestId: string) => void
   saveTestResult: (testId: string, score: number) => void
   getSubmission: (learnerId: string, submissionId?: string) => AppData['submissions'][0] | undefined
   getSubmissionById: (submissionId: string) => AppData['submissions'][0] | undefined
@@ -59,6 +62,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>(
     rawData.notifications as Notification[]
   )
+  const [tasks, setTasks] = useState<MentorTask[]>(rawData.tasks as MentorTask[])
 
   const dashboardAnalytics = useMemo(
     (): DashboardAnalytics => ({
@@ -75,6 +79,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const markNotificationRead = useCallback((notificationId: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
+    )
+  }, [])
+
+  const toggleTaskStatus = useCallback((taskId: string) => {
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === taskId
+          ? { ...t, status: t.status === 'COMPLETED' ? 'PENDING' : 'COMPLETED' }
+          : t
+      )
+    )
+  }, [])
+
+  const completeTaskBySubmission = useCallback((submissionId: string) => {
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.submissionId === submissionId ? { ...t, status: 'COMPLETED' } : t
+      )
+    )
+  }, [])
+
+  const completeTaskByReviewRequest = useCallback((reviewRequestId: string) => {
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.reviewRequestId === reviewRequestId ? { ...t, status: 'COMPLETED' } : t
+      )
     )
   }, [])
 
@@ -154,13 +184,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
         programs,
         fields,
         skillTests,
-        tasks: rawData.tasks as MentorTask[],
+        tasks,
         notifications,
         conversations: rawData.conversations as ChatConversation[],
         reviewRequests: rawData.reviewRequests as ReviewRequest[],
         testResults,
         saveTestResult,
         markNotificationRead,
+        toggleTaskStatus,
+        completeTaskBySubmission,
+        completeTaskByReviewRequest,
         getSubmission,
         getSubmissionById,
         updateLearnerStatus,

@@ -225,17 +225,22 @@ export default function MentorTasksPage() {
 }
 
 function TaskRow({ task }: { task: MentorTask }) {
+  const { toggleTaskStatus } = useApp()
   const done = task.status === 'COMPLETED'
+
   return (
     <li className="flex items-start gap-3 text-sm">
-      <span
-        className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center border ${
-          done ? 'border-stone-400 bg-stone-100 text-stone-600' : 'border-stone-400'
+      <button
+        type="button"
+        onClick={() => toggleTaskStatus(task.id)}
+        className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center border transition hover:border-stone-600 ${
+          done ? 'border-stone-400 bg-stone-100 text-stone-600' : 'border-stone-400 bg-white'
         }`}
-        aria-hidden
+        aria-label={done ? 'Mark task as incomplete' : 'Mark task as complete'}
+        aria-pressed={done}
       >
         {done ? '✕' : ''}
-      </span>
+      </button>
       <span className={`min-w-0 flex-1 ${done ? 'text-stone-500 line-through' : 'text-stone-800'}`}>
         {taskLabel(task)}
       </span>

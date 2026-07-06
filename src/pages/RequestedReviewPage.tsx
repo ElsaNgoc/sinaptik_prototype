@@ -12,7 +12,8 @@ import CommentBox, {
 
 export default function RequestedReviewPage() {
   const { requestId } = useParams<{ requestId: string }>()
-  const { data, reviewRequests, getSubmissionById, resolveSubmission } = useApp()
+  const { data, reviewRequests, getSubmissionById, resolveSubmission, completeTaskByReviewRequest } =
+    useApp()
   const navigate = useNavigate()
   const location = useLocation()
   const contentRef = useRef<HTMLPreElement>(null)
@@ -84,8 +85,9 @@ export default function RequestedReviewPage() {
   }, [isResolved])
 
   const handleMark = () => {
-    if (!learner || !canMark) return
+    if (!learner || !canMark || !request) return
     resolveSubmission(learner.id)
+    completeTaskByReviewRequest(request.id)
     navigate('/mentor/tasks')
   }
 

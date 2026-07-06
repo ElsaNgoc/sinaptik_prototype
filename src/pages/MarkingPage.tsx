@@ -12,7 +12,7 @@ import CommentBox, {
 
 export default function MarkingPage() {
   const { submissionId } = useParams<{ submissionId: string }>()
-  const { data, getSubmissionById, resolveSubmission } = useApp()
+  const { data, getSubmissionById, resolveSubmission, completeTaskBySubmission } = useApp()
   const navigate = useNavigate()
   const location = useLocation()
   const contentRef = useRef<HTMLPreElement>(null)
@@ -92,8 +92,9 @@ export default function MarkingPage() {
   }, [])
 
   const handleMark = () => {
-    if (!learner || !canMark) return
+    if (!learner || !canMark || !submission) return
     resolveSubmission(learner.id)
+    completeTaskBySubmission(submission.id)
     navigate('/mentor/tasks')
   }
 
