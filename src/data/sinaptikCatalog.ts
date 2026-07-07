@@ -36,6 +36,8 @@ export interface Program {
   durationWeeks: number
   mentorId: string
   modules: ProgramModule[]
+  /** Label shown on Course Catalog when mentor has an active cohort for this program. */
+  activeCohortName?: string
 }
 
 export interface SkillTest {
@@ -184,6 +186,7 @@ export const programs: Program[] = [
       '12-week intensive program to become job-ready. Python, SQL, visualization, and real industry cases.',
     durationWeeks: 12,
     mentorId: 'm1',
+    activeCohortName: 'Data Analytics Bootcamp — Batch 7 (2026)',
     modules: [
       { id: 'mod1', title: 'Module 1: Python for Data' },
       { id: 'mod2', title: 'Module 2: SQL & Databases' },
@@ -201,6 +204,7 @@ export const programs: Program[] = [
       'Applied data science program covering collection, cleaning, modeling, and deployment.',
     durationWeeks: 14,
     mentorId: 'm1',
+    activeCohortName: 'Data Science — Batch 5 (2026)',
     modules: [
       { id: 'ds1', title: 'Module 1: Python Foundations' },
       { id: 'ds2', title: 'Module 2: Statistics for Data Science' },
@@ -243,6 +247,7 @@ export const programs: Program[] = [
     description: 'Core leadership skills for emerging tech leaders and team leads.',
     durationWeeks: 6,
     mentorId: 'm1',
+    activeCohortName: 'Leadership Essentials — Batch 3 (2026)',
     modules: [
       { id: 'le1', title: 'Leadership mindset' },
       { id: 'le2', title: 'Effective communication' },

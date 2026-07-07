@@ -4,7 +4,7 @@ export interface SidebarNavItem {
   to: string
   label: string
   end?: boolean
-  badge?: number
+  badge?: string
 }
 
 interface SidebarShellProps {
@@ -50,8 +50,10 @@ export default function SidebarShell({
                   }
                 >
                   {item.label}
-                  {item.badge !== undefined && item.badge > 0 && (
-                    <span className="text-xs text-stone-500">{item.badge}</span>
+                  {item.badge && (
+                    <span className="rounded-full bg-stone-200 px-1.5 py-0.5 text-xs font-medium tabular-nums text-stone-700">
+                      {item.badge}
+                    </span>
                   )}
                 </NavLink>
               </li>

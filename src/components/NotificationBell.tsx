@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
-import { getNotificationRoute, getRecentNotifications } from '../utils/mockDataHelpers'
+import { getNotificationRoute, getRecentNotifications, formatBadgeCount, getUnreadNotificationCount } from '../utils/mockDataHelpers'
 import { getNotificationTypeStyle, READ_NOTIFICATION_ROW } from '../utils/notificationStyles'
 import { NOTIFICATIONS_RETURN } from '../utils/taskNavigation'
 import type { Notification } from '../types'
@@ -28,7 +28,8 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const unread = notifications.filter((n) => !n.read).length
+  const unread = getUnreadNotificationCount(notifications)
+  const unreadBadge = formatBadgeCount(unread)
   const recent = getRecentNotifications(notifications, 5)
 
   useEffect(() => {
@@ -57,19 +58,28 @@ export default function NotificationBell() {
         onClick={() => setOpen((prev) => !prev)}
         className="relative rounded p-1.5 transition hover:bg-stone-100"
         title="Notifications"
-        aria-label="Notifications"
+        aria-label={unreadBadge ? `Notifications, ${unreadBadge} unread` : 'Notifications'}
         aria-expanded={open}
       >
         <BellIcon />
-        {unread > 0 && (
-          <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
+        {unreadBadge && (
+          <span className="absolute -right-1 -top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold leading-none text-white">
+            {unreadBadge}
+          </span>
         )}
       </button>
 
       {open && (
         <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-md border border-stone-300 bg-white shadow-lg">
           <div className="border-b border-stone-200 px-4 py-2.5">
-            <p className="text-sm font-medium text-stone-900">Notifications</p>
+            <p className="text-sm font-medium text-stone-900">
+              Notifications
+              {unreadBadge ? (
+                <span className="ml-2 font-normal text-stone-500">({unreadBadge} unread)</span>
+              ) : (
+                <span className="ml-2 font-normal text-stone-400">(all read)</span>
+              )}
+            </p>
           </div>
 
           {recent.length === 0 ? (

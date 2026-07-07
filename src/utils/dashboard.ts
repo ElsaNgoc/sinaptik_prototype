@@ -8,9 +8,10 @@ export function categorizeLearner(status: LearnerStatus): BoardColumn {
 
 export function groupLearnersByColumn(learners: Learner[]) {
   return {
-    on_track: learners.filter((l) => categorizeLearner(l.status) === 'on_track'),
-    needs_review: learners.filter((l) => categorizeLearner(l.status) === 'needs_review'),
-    stuck: learners.filter((l) => categorizeLearner(l.status) === 'stuck'),
+    on_track: learners.filter((l) => l.status === 'ON_TRACK'),
+    completed: learners.filter((l) => l.status === 'COMPLETED'),
+    needs_review: learners.filter((l) => l.status === 'PENDING_MENTOR'),
+    stuck: learners.filter((l) => l.status === 'STUCK' || l.status === 'AT_RISK'),
   }
 }
 
@@ -101,4 +102,22 @@ export function isSystemAlert(type: ActivityLog['type']): boolean {
 
 export function getMentorLearners(learners: Learner[], mentorId: string): Learner[] {
   return learners.filter((l) => l.assignedMentor.id === mentorId)
+}
+
+export function getDashboardActions(
+  tasks: { type: string; status: string }[],
+  notifications: { type: string; read: boolean }[],
+  learners: Learner[]
+) {
+  return {
+    pendingSubmissions: tasks.filter(
+      (t) => t.type === 'SUBMISSION' && t.status === 'PENDING'
+    ).length,
+    pendingReviewRequests: tasks.filter(
+      (t) => t.type === 'REVIEW_REQUEST' && t.status === 'PENDING'
+    ).length,
+    unreadAiAlerts: notifications.filter((n) => n.type === 'AI_ALERT' && !n.read).length,
+    pendingMentorLearners: learners.filter((l) => l.status === 'PENDING_MENTOR').length,
+    stuckOrAtRisk: learners.filter((l) => l.status === 'STUCK' || l.status === 'AT_RISK').length,
+  }
 }

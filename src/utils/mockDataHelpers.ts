@@ -104,6 +104,19 @@ export function getUnreadNotificationCount(notifications: Notification[]): numbe
   return notifications.filter((n) => !n.read).length
 }
 
+export const BADGE_COUNT_CAP = 5
+
+/** Show 1–5 or "5+" for nav/icon badges. */
+export function formatBadgeCount(count: number, cap = BADGE_COUNT_CAP): string | undefined {
+  if (count <= 0) return undefined
+  if (count > cap) return `${cap}+`
+  return String(count)
+}
+
+export function getUnreadChatCount(conversations: ChatConversation[]): number {
+  return conversations.reduce((sum, c) => sum + c.unreadCount, 0)
+}
+
 export function sortNotificationsByDate(notifications: Notification[]): Notification[] {
   return [...notifications].sort((a, b) => b.date.localeCompare(a.date))
 }
@@ -170,6 +183,9 @@ export function getNotificationRoute(
   }
   if (type === 'CHAT') {
     return `/mentor/chat/${notification.learnerId}`
+  }
+  if (type === 'AI_ALERT') {
+    return `/mentor/learner/${notification.learnerId}`
   }
   if (type === 'MENTOR_REQUEST') {
     return `/mentor/learner/${notification.learnerId}`

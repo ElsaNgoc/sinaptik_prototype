@@ -55,6 +55,7 @@ interface AppContextValue {
   submitMentorRequest: (reason: string) => void
   acceptFeedback: () => void
   resolveSubmission: (learnerId: string) => void
+  resolveReviewRequest: (reviewRequestId: string, reviewResponse: string) => void
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
@@ -76,6 +77,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [tasks, setTasks] = useState<MentorTask[]>(rawData.tasks as MentorTask[])
   const [submissions, setSubmissions] = useState<Submission[]>(
     rawData.submissions as Submission[]
+  )
+  const [reviewRequests, setReviewRequests] = useState<ReviewRequest[]>(
+    rawData.reviewRequests as ReviewRequest[]
   )
 
   const dashboardAnalytics = useMemo(
@@ -206,6 +210,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [updateLearnerStatus]
   )
 
+  const resolveReviewRequest = useCallback(
+    (reviewRequestId: string, reviewResponse: string) => {
+      const request = reviewRequests.find((r) => r.id === reviewRequestId)
+      if (!request) return
+
+      setReviewRequests((prev) =>
+        prev.map((r) =>
+          r.id === reviewRequestId
+            ? {
+                ...r,
+                status: 'RESOLVED' as const,
+                reviewResponse,
+              }
+            : r
+        )
+      )
+      resolveSubmission(request.learnerId)
+      completeTaskByReviewRequest(reviewRequestId)
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.reviewRequestId === reviewRequestId ? { ...n, read: true, requiresAction: false } : n
+        )
+      )
+    },
+    [reviewRequests, resolveSubmission, completeTaskByReviewRequest]
+  )
+
   const data: AppState = {
     ...(rawData as AppData),
     submissions,
@@ -228,7 +259,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         tasks,
         notifications,
         conversations: rawData.conversations as ChatConversation[],
-        reviewRequests: rawData.reviewRequests as ReviewRequest[],
+        reviewRequests,
         testResults,
         saveTestResult,
         markNotificationRead,
@@ -242,6 +273,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         submitMentorRequest,
         acceptFeedback,
         resolveSubmission,
+        resolveReviewRequest,
       }}
     >
       {children}

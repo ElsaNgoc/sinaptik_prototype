@@ -1,47 +1,91 @@
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useMemo, useState, useEffect } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import StatusBadge from '../components/StatusBadge'
 import { getMentorLearners, formatRelativeTime } from '../utils/dashboard'
 import { searchLearners } from '../utils/mockDataHelpers'
-import type { Learner, LearnerStatus } from '../types'
+import type { Learner } from '../types'
 
 const PAGE_SIZE = 10
 
-type SortMode = 'default' | 'priority'
+/** Matches dashboard triage groups — no per-enum duplicates. */
+type LearnerGroup = 'ALL' | 'WORK_QUEUE' | 'FOLLOW_UP' | 'ON_TRACK' | 'COMPLETED'
 
-function sortByPriority(learners: Learner[]): Learner[] {
-  const priority = (status: LearnerStatus) => {
-    if (status === 'STUCK') return 0
-    if (status === 'AT_RISK') return 1
-    if (status === 'PENDING_MENTOR') return 2
-    return 3
+const GROUP_OPTIONS: { value: LearnerGroup; label: string }[] = [
+  { value: 'ALL', label: 'All learners' },
+  { value: 'WORK_QUEUE', label: 'Work queue — pending mentor' },
+  { value: 'FOLLOW_UP', label: 'Follow up — stuck & at risk' },
+  { value: 'ON_TRACK', label: 'On track' },
+  { value: 'COMPLETED', label: 'Completed' },
+]
+
+const GROUP_SUBTITLE: Partial<Record<LearnerGroup, string>> = {
+  WORK_QUEUE: ' · Work queue',
+  FOLLOW_UP: ' · Follow up',
+  ON_TRACK: ' · On track',
+  COMPLETED: ' · Completed',
+}
+
+function groupFromSearchParams(searchParams: URLSearchParams): LearnerGroup | null {
+  const board = searchParams.get('board')
+  const status = searchParams.get('status')
+  if (board === 'stuck') return 'FOLLOW_UP'
+  if (status === 'PENDING_MENTOR') return 'WORK_QUEUE'
+  if (status === 'ON_TRACK') return 'ON_TRACK'
+  if (status === 'COMPLETED') return 'COMPLETED'
+  if (status === 'STUCK' || status === 'AT_RISK') return 'FOLLOW_UP'
+  return null
+}
+
+function filterByGroup(learners: Learner[], group: LearnerGroup): Learner[] {
+  switch (group) {
+    case 'WORK_QUEUE':
+      return learners.filter((l) => l.status === 'PENDING_MENTOR')
+    case 'FOLLOW_UP':
+      return learners.filter((l) => l.status === 'STUCK' || l.status === 'AT_RISK')
+    case 'ON_TRACK':
+      return learners.filter((l) => l.status === 'ON_TRACK')
+    case 'COMPLETED':
+      return learners.filter((l) => l.status === 'COMPLETED')
+    default:
+      return learners
   }
+}
 
-  return [...learners]
-    .map((learner, index) => ({ learner, index }))
-    .sort((a, b) => {
-      const diff = priority(a.learner.status) - priority(b.learner.status)
-      return diff !== 0 ? diff : a.index - b.index
-    })
-    .map(({ learner }) => learner)
+function sortLearners(learners: Learner[], group: LearnerGroup): Learner[] {
+  if (group !== 'ALL') {
+    return [...learners].sort((a, b) => a.name.localeCompare(b.name))
+  }
+  const priority = (l: Learner) => {
+    if (l.status === 'PENDING_MENTOR') return 0
+    if (l.status === 'STUCK') return 1
+    if (l.status === 'AT_RISK') return 2
+    if (l.status === 'ON_TRACK') return 3
+    return 4
+  }
+  return [...learners].sort((a, b) => {
+    const diff = priority(a) - priority(b)
+    return diff !== 0 ? diff : a.name.localeCompare(b.name)
+  })
 }
 
 export default function MentorLearnersPage() {
   const { data } = useApp()
+  const [searchParams] = useSearchParams()
   const myLearners = getMentorLearners(data.learners, data.currentUser.id)
   const [page, setPage] = useState(0)
-  const [sortMode, setSortMode] = useState<SortMode>('default')
   const [query, setQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<LearnerStatus | 'ALL'>('ALL')
+  const [group, setGroup] = useState<LearnerGroup>('ALL')
+
+  useEffect(() => {
+    const fromUrl = groupFromSearchParams(searchParams)
+    if (fromUrl) setGroup(fromUrl)
+  }, [searchParams])
 
   const filtered = useMemo(() => {
-    let list = searchLearners(myLearners, query)
-    if (statusFilter !== 'ALL') {
-      list = list.filter((l) => l.status === statusFilter)
-    }
-    return sortMode === 'priority' ? sortByPriority(list) : list
-  }, [myLearners, query, statusFilter, sortMode])
+    const list = filterByGroup(searchLearners(myLearners, query), group)
+    return sortLearners(list, group)
+  }, [myLearners, query, group])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const visible = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
@@ -51,7 +95,8 @@ export default function MentorLearnersPage() {
       <h1 className="page-title">Learners</h1>
       <p className="page-subtitle">
         {myLearners.length} learners under mentor {data.currentUser.name} · Cohort total:{' '}
-        {data.cohort.totalLearners} learners
+        {data.cohort.totalLearners}
+        {GROUP_SUBTITLE[group]}
       </p>
 
       <div className="mt-6 flex flex-wrap items-center gap-4">
@@ -66,38 +111,25 @@ export default function MentorLearnersPage() {
           className="min-w-[200px] flex-1 rounded-md border border-stone-300 bg-white px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
         />
         <div className="flex items-center gap-2">
-          <label htmlFor="learner-sort" className="text-sm text-stone-700">
-            Sort by
+          <label htmlFor="learner-group" className="text-sm text-stone-700">
+            Show
           </label>
           <select
-            id="learner-sort"
-            value={sortMode}
+            id="learner-group"
+            value={group}
             onChange={(e) => {
-              setSortMode(e.target.value as SortMode)
+              setGroup(e.target.value as LearnerGroup)
               setPage(0)
             }}
-            className="filter-select"
+            className="filter-select min-w-[220px]"
           >
-            <option value="default">Default order</option>
-            <option value="priority">Priority — stuck &amp; at risk first</option>
+            {GROUP_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
           </select>
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => {
-            setStatusFilter(e.target.value as LearnerStatus | 'ALL')
-            setPage(0)
-          }}
-          className="filter-select"
-          aria-label="Filter by status"
-        >
-          <option value="ALL">All statuses</option>
-          <option value="ON_TRACK">On track</option>
-          <option value="PENDING_MENTOR">Pending mentor</option>
-          <option value="AT_RISK">At risk</option>
-          <option value="STUCK">Stuck</option>
-          <option value="COMPLETED">Completed</option>
-        </select>
       </div>
 
       <div className="card mt-6 overflow-hidden border-stone-300">
@@ -114,28 +146,36 @@ export default function MentorLearnersPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-200">
-            {visible.map((learner) => (
-              <tr key={learner.id} className="hover:bg-stone-50">
-                <td className="px-4 py-3 font-medium text-stone-900">{learner.name}</td>
-                <td className="px-4 py-3 text-stone-600">{learner.currentModule}</td>
-                <td className="px-4 py-3">
-                  <StatusBadge status={learner.status} />
-                </td>
-                <td className="px-4 py-3 text-stone-900">{learner.avgScore}</td>
-                <td className="px-4 py-3 text-stone-600">{learner.dropOffRisk}</td>
-                <td className="px-4 py-3 text-stone-500">
-                  {formatRelativeTime(learner.lastActive)}
-                </td>
-                <td className="px-4 py-3">
-                  <Link
-                    to={`/mentor/learner/${learner.id}`}
-                    className="text-accent hover:underline"
-                  >
-                    View
-                  </Link>
+            {visible.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="px-4 py-10 text-center text-stone-500">
+                  No learners match this filter.
                 </td>
               </tr>
-            ))}
+            ) : (
+              visible.map((learner) => (
+                <tr key={learner.id} className="hover:bg-stone-50">
+                  <td className="px-4 py-3 font-medium text-stone-900">{learner.name}</td>
+                  <td className="px-4 py-3 text-stone-600">{learner.currentModule}</td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={learner.status} />
+                  </td>
+                  <td className="px-4 py-3 text-stone-900">{learner.avgScore}</td>
+                  <td className="px-4 py-3 text-stone-600">{learner.dropOffRisk}</td>
+                  <td className="px-4 py-3 text-stone-500">
+                    {formatRelativeTime(learner.lastActive)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <Link
+                      to={`/mentor/learner/${learner.id}`}
+                      className="text-accent hover:underline"
+                    >
+                      View
+                    </Link>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -149,7 +189,9 @@ export default function MentorLearnersPage() {
         >
           ‹
         </button>
-        <span>{page + 1}</span>
+        <span>
+          {page + 1} / {totalPages}
+        </span>
         <button
           type="button"
           onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}

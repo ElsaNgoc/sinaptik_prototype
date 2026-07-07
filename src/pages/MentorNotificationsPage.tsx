@@ -1,10 +1,12 @@
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useMemo, useState, useEffect } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import {
   filterNotificationsByTab,
   getNotificationRoute,
   sortNotificationsByDate,
+  formatBadgeCount,
+  getUnreadNotificationCount,
 } from '../utils/mockDataHelpers'
 import {
   getNotificationTypeStyle,
@@ -14,12 +16,13 @@ import {
 import { NOTIFICATIONS_RETURN } from '../utils/taskNavigation'
 import type { Notification } from '../types'
 
-type Tab = 'ALL' | 'MENTOR_REQUEST' | 'ASSIGNMENT_SUBMISSION'
+type Tab = 'ALL' | 'MENTOR_REQUEST' | 'ASSIGNMENT_SUBMISSION' | 'AI_ALERT'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'ALL', label: 'All Notification' },
   { id: 'MENTOR_REQUEST', label: 'Mentor Request' },
   { id: 'ASSIGNMENT_SUBMISSION', label: 'Assignment Submission' },
+  { id: 'AI_ALERT', label: 'AI Alert' },
 ]
 
 function formatNotificationDate(isoDate: string) {
@@ -116,13 +119,24 @@ function NotificationRow({
 
 export default function MentorNotificationsPage() {
   const { notifications, markNotificationRead } = useApp()
+  const [searchParams] = useSearchParams()
   const [tab, setTab] = useState<Tab>('ALL')
   const [query, setQuery] = useState('')
 
+  useEffect(() => {
+    const type = searchParams.get('type')
+    if (type === 'AI_ALERT') setTab('AI_ALERT')
+  }, [searchParams])
+
+  const unreadCount = getUnreadNotificationCount(notifications)
+  const unreadLabel = formatBadgeCount(unreadCount)
   const actionCount = notifications.filter((n) => n.requiresAction).length
 
   const filtered = useMemo(() => {
-    let list = filterNotificationsByTab(notifications, tab)
+    let list =
+      tab === 'AI_ALERT'
+        ? notifications.filter((n) => n.type === 'AI_ALERT')
+        : filterNotificationsByTab(notifications, tab)
     const q = query.trim().toLowerCase()
     if (q) {
       list = list.filter(
@@ -136,7 +150,18 @@ export default function MentorNotificationsPage() {
   return (
     <div>
       <h1 className="page-title">Inbox</h1>
-      <p className="page-subtitle">{actionCount} items require attention</p>
+      <p className="page-subtitle">
+        {unreadLabel ? (
+          <>
+            <span className="font-medium text-stone-900">{unreadLabel} unread</span>
+            {actionCount > 0 && (
+              <> · {actionCount} {actionCount === 1 ? 'item' : 'items'} require attention</>
+            )}
+          </>
+        ) : (
+          <>All caught up · {actionCount > 0 ? `${actionCount} items require attention` : 'no pending actions'}</>
+        )}
+      </p>
 
       <div className="mt-4">
         <NotificationTypeLegend />

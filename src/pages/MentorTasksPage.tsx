@@ -37,7 +37,7 @@ export default function MentorTasksPage() {
   const { tasks } = useApp()
   const [viewYear, setViewYear] = useState(2026)
   const [viewMonth, setViewMonth] = useState(6)
-  const [selectedDate, setSelectedDate] = useState(formatIsoDate(2026, 6, 3))
+  const [selectedDate, setSelectedDate] = useState(formatIsoDate(2026, 6, 6))
 
   const dayStatusByDate = useMemo(() => getCalendarDayStatus(tasks), [tasks])
   const dayTasks = useMemo(() => getTasksForDate(tasks, selectedDate), [tasks, selectedDate])
