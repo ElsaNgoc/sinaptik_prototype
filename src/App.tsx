@@ -1,12 +1,6 @@
-import { Routes, Route, Navigate, useParams } from 'react-router-dom'
+import { Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom'
 import { useApp } from './context/AppContext'
-import HomePage from './pages/HomePage'
-import LearnerLayout from './components/LearnerLayout'
 import MentorLayout from './components/MentorLayout'
-import LearnerSubmissionPage from './pages/LearnerSubmissionPage'
-import LearnerModulesPage from './pages/LearnerModulesPage'
-import LearnerProgressPage from './pages/LearnerProgressPage'
-import LearnerTestsPage from './pages/LearnerTestsPage'
 import MentorDashboardPage from './pages/MentorDashboardPage'
 import MentorTasksPage from './pages/MentorTasksPage'
 import MentorLearnersPage from './pages/MentorLearnersPage'
@@ -22,39 +16,39 @@ function LegacyFeedbackRedirect() {
   const { getSubmission } = useApp()
   const submission = learnerId ? getSubmission(learnerId) : undefined
   if (submission) {
-    return <Navigate to={`/mentor/marking/${submission.id}`} replace />
+    return <Navigate to={`/marking/${submission.id}`} replace />
   }
-  return <Navigate to="/mentor/tasks" replace />
+  return <Navigate to="/tasks" replace />
+}
+
+function LegacyMentorRedirect() {
+  const { pathname } = useLocation()
+  const next = pathname.replace(/^\/mentor/, '') || '/'
+  return <Navigate to={next} replace />
 }
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
-
-      <Route path="/learner" element={<LearnerLayout />}>
-        <Route index element={<LearnerSubmissionPage />} />
-        <Route path="modules" element={<LearnerModulesPage />} />
-        <Route path="tests" element={<LearnerTestsPage />} />
-        <Route path="progress" element={<LearnerProgressPage />} />
-      </Route>
-
-      <Route path="/mentor" element={<MentorLayout />}>
+      <Route path="/" element={<MentorLayout />}>
         <Route index element={<MentorDashboardPage />} />
         <Route path="tasks" element={<MentorTasksPage />} />
         <Route path="learners" element={<MentorLearnersPage />} />
+        <Route path="learners/:learnerId" element={<LearnerProfilePage />} />
         <Route path="notifications" element={<MentorNotificationsPage />} />
         <Route path="programs" element={<MentorProgramsPage />} />
-        <Route path="courses" element={<Navigate to="/mentor/programs" replace />} />
-        <Route path="learner/:learnerId" element={<LearnerProfilePage />} />
+        <Route path="courses" element={<Navigate to="/programs" replace />} />
         <Route path="marking/:submissionId" element={<MarkingPage />} />
         <Route path="review/:requestId" element={<RequestedReviewPage />} />
-        <Route path="alerts" element={<Navigate to="/mentor/notifications" replace />} />
+        <Route path="alerts" element={<Navigate to="/notifications" replace />} />
         <Route path="feedback/:learnerId" element={<LegacyFeedbackRedirect />} />
       </Route>
 
-      <Route path="/mentor/chat" element={<MentorChatPage />} />
-      <Route path="/mentor/chat/:learnerId" element={<MentorChatPage />} />
+      <Route path="/chat" element={<MentorChatPage />} />
+      <Route path="/chat/:learnerId" element={<MentorChatPage />} />
+
+      <Route path="/mentor/*" element={<LegacyMentorRedirect />} />
+      <Route path="/learner/*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }

@@ -1,10 +1,10 @@
 export const TASKS_RETURN = {
-  returnTo: '/mentor/tasks',
+  returnTo: '/tasks',
   returnLabel: 'Back to tasks',
 } as const
 
 export const NOTIFICATIONS_RETURN = {
-  returnTo: '/mentor/notifications',
+  returnTo: '/notifications',
   returnLabel: 'Back to inbox',
 } as const
 

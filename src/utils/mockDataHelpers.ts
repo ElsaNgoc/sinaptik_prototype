@@ -40,17 +40,31 @@ export function getCalendarTaskMarkers(tasks: MentorTask[]) {
   return Array.from(dates).sort()
 }
 
-/** Per-day calendar dot: green when all tasks done, red when any are still pending. */
-export function getCalendarDayStatus(tasks: MentorTask[]) {
-  const byDate = new Map<string, { pending: number }>()
+export type CalendarDayStatus = 'complete' | 'due' | 'upcoming'
+
+/**
+ * Per-day calendar dot:
+ * - complete: all tasks done
+ * - due: has pending task on/before today (needs attention now)
+ * - upcoming: has pending task in the future (not yet actionable)
+ */
+export function getCalendarDayStatus(tasks: MentorTask[], todayIso: string) {
+  const byDate = new Map<string, { pending: number; total: number }>()
   for (const task of tasks) {
-    const entry = byDate.get(task.dueDate) ?? { pending: 0 }
+    const entry = byDate.get(task.dueDate) ?? { pending: 0, total: 0 }
+    entry.total++
     if (task.status === 'PENDING') entry.pending++
     byDate.set(task.dueDate, entry)
   }
-  const result = new Map<string, 'complete' | 'pending'>()
+  const result = new Map<string, CalendarDayStatus>()
   byDate.forEach((v, date) => {
-    result.set(date, v.pending > 0 ? 'pending' : 'complete')
+    if (v.pending === 0) {
+      result.set(date, 'complete')
+    } else if (date > todayIso) {
+      result.set(date, 'upcoming')
+    } else {
+      result.set(date, 'due')
+    }
   })
   return result
 }
@@ -223,32 +237,32 @@ export function getNotificationRoute(
   type: NotificationType
 ): string {
   if (notification.reviewRequestId) {
-    return `/mentor/review/${notification.reviewRequestId}`
+    return `/review/${notification.reviewRequestId}`
   }
   if (notification.submissionId) {
-    return `/mentor/marking/${notification.submissionId}`
+    return `/marking/${notification.submissionId}`
   }
   if (type === 'CHAT') {
-    return `/mentor/chat/${notification.learnerId}`
+    return `/chat/${notification.learnerId}`
   }
   if (type === 'AI_ALERT') {
-    return `/mentor/learner/${notification.learnerId}`
+    return `/learners/${notification.learnerId}`
   }
   if (type === 'MENTOR_REQUEST') {
-    return `/mentor/learner/${notification.learnerId}`
+    return `/learners/${notification.learnerId}`
   }
   if (type === 'SUBMISSION' && notification.submissionId) {
-    return `/mentor/marking/${notification.submissionId}`
+    return `/marking/${notification.submissionId}`
   }
-  return `/mentor/learner/${notification.learnerId}`
+  return `/learners/${notification.learnerId}`
 }
 
 export function getTaskRoute(task: MentorTask): string {
   if (task.type === 'REVIEW_REQUEST' && task.reviewRequestId) {
-    return `/mentor/review/${task.reviewRequestId}`
+    return `/review/${task.reviewRequestId}`
   }
   if (task.submissionId) {
-    return `/mentor/marking/${task.submissionId}`
+    return `/marking/${task.submissionId}`
   }
-  return `/mentor/learner/${task.learnerId}`
+  return `/learners/${task.learnerId}`
 }

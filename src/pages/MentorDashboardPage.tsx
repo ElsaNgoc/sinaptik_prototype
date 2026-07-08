@@ -45,8 +45,8 @@ export default function MentorDashboardPage() {
       <section className="mt-10">
         <h2 className="section-title">Who needs you?</h2>
         <p className="mt-2 max-w-2xl text-sm text-stone-600">
-          Morning preview — full lists live in <Link to="/mentor/tasks" className="text-accent hover:underline">Tasks</Link> and{' '}
-          <Link to="/mentor/learners" className="text-accent hover:underline">Learners</Link>.
+          Morning preview — full lists live in <Link to="/tasks" className="text-accent hover:underline">Tasks</Link> and{' '}
+          <Link to="/learners" className="text-accent hover:underline">Learners</Link>.
         </p>
 
         <div className="mt-6 space-y-6">
@@ -56,7 +56,7 @@ export default function MentorDashboardPage() {
             subtitle="Submissions waiting for you"
             count={pendingWork.length}
             previewCount={workPreview.length}
-            viewAllTo="/mentor/tasks"
+            viewAllTo="/tasks"
             viewAllLabel="Open Tasks"
             emptyText="No tasks waiting for you."
           >
@@ -75,7 +75,7 @@ export default function MentorDashboardPage() {
             subtitle="At risk or stuck — no grading task"
             count={grouped.stuck.length}
             previewCount={followUpPreview.length}
-            viewAllTo="/mentor/learners?board=stuck"
+            viewAllTo="/learners?board=stuck"
             viewAllLabel="All at risk & stuck"
             emptyText="No learners flagged for follow-up."
           >
@@ -161,7 +161,7 @@ function WorkRow({ task, learner }: { task: MentorTask; learner?: Learner }) {
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <Link
-            to={learner ? `/mentor/learner/${learner.id}` : '#'}
+            to={learner ? `/learners/${learner.id}` : '#'}
             className="font-medium text-stone-900 hover:underline"
           >
             {task.learnerName}
@@ -197,7 +197,7 @@ function FollowUpRow({ learner }: { learner: Learner }) {
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <Link
-            to={`/mentor/learner/${learner.id}`}
+            to={`/learners/${learner.id}`}
             className="font-medium text-stone-900 hover:underline"
           >
             {learner.name}
@@ -210,7 +210,7 @@ function FollowUpRow({ learner }: { learner: Learner }) {
         </p>
       </div>
       <Link
-        to={`/mentor/chat/${learner.id}`}
+        to={`/chat/${learner.id}`}
         className="shrink-0 rounded border border-red-400 bg-white px-3 py-1.5 text-xs font-medium text-red-900 hover:bg-red-50"
       >
         Message →

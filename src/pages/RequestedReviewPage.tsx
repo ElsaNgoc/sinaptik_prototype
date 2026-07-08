@@ -89,13 +89,13 @@ export default function RequestedReviewPage() {
     const reviewResponse =
       general?.text ?? comments[0]?.text ?? 'Review resolved — see comments above.'
     resolveReviewRequest(request.id, reviewResponse)
-    navigate('/mentor/tasks')
+    navigate('/tasks')
   }
 
   if (!request || !submission || !learner) {
     return (
       <div>
-        <BackButton to="/mentor/tasks" label="Back to tasks" />
+        <BackButton to="/tasks" label="Back to tasks" />
         <p className="mt-4 text-stone-500">Review request not found.</p>
       </div>
     )
@@ -105,7 +105,7 @@ export default function RequestedReviewPage() {
   const generalComments = comments.filter((c) => !c.selectedText)
   const back = resolveBackNavigation(
     location.state,
-    `/mentor/learner/${learner.id}`,
+    `/learners/${learner.id}`,
     `Back to ${learner.name}`
   )
 

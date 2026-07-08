@@ -83,7 +83,7 @@ export default function MentorAlertsPage() {
                       <p className="text-xs text-stone-400">{formatTimestamp(log.timestamp)}</p>
                     </div>
                     <Link
-                      to={`/mentor/feedback/${log.learnerId}`}
+                      to={`/feedback/${log.learnerId}`}
                       className="btn-primary shrink-0 rounded-md text-sm"
                     >
                       Review
@@ -135,7 +135,7 @@ export default function MentorAlertsPage() {
                       <p className="text-xs text-stone-400">{formatTimestamp(log.timestamp)}</p>
                     </div>
                     <Link
-                      to={`/mentor/learner/${log.learnerId}`}
+                      to={`/learners/${log.learnerId}`}
                       className="text-sm text-accent hover:underline"
                     >
                       View profile

@@ -32,11 +32,11 @@ function getActivityReviewRoute(
 
   if (log.type === 'MENTOR_REQUEST') {
     const open = reviewRequests.find((r) => r.learnerId === learnerId && r.status === 'OPEN')
-    if (open) return `/mentor/review/${open.id}`
+    if (open) return `/review/${open.id}`
   }
 
   const submission = submissions.find((s) => s.learnerId === learnerId)
-  if (submission) return `/mentor/marking/${submission.id}`
+  if (submission) return `/marking/${submission.id}`
 
   return null
 }
@@ -76,7 +76,7 @@ export default function LearnerProfilePage() {
     learner.moduleHistory.find((m) => m.status === 'IN_PROGRESS') ??
     completedModules[completedModules.length - 1]
 
-  const back = resolveBackNavigation(location.state, '/mentor/learners', 'Back to learners')
+  const back = resolveBackNavigation(location.state, '/learners', 'Back to learners')
 
   return (
     <div>
@@ -87,7 +87,7 @@ export default function LearnerProfilePage() {
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="page-title">{learner.name}</h1>
             <Link
-              to={`/mentor/chat/${learner.id}`}
+              to={`/chat/${learner.id}`}
               className="rounded p-1 text-stone-600 hover:bg-stone-100 hover:text-stone-900"
               title="Message learner"
             >
@@ -174,7 +174,7 @@ export default function LearnerProfilePage() {
               </p>
               <button
                 type="button"
-                onClick={() => navigate(`/mentor/marking/${submission.id}`)}
+                onClick={() => navigate(`/marking/${submission.id}`)}
                 className="btn-primary mt-3 w-full text-sm"
               >
                 Review submission

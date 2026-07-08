@@ -88,7 +88,7 @@ export default function FeedbackViewPage() {
     if (learnerId) {
       resolveSubmission(learnerId)
       setResolved(true)
-      setTimeout(() => navigate('/mentor'), 1500)
+      setTimeout(() => navigate('/'), 1500)
     }
   }
 
@@ -99,7 +99,7 @@ export default function FeedbackViewPage() {
   if (!submission) {
     return (
       <div>
-        <Link to={`/mentor/learner/${learnerId}`} className="text-sm text-accent hover:underline">
+        <Link to={`/learners/${learnerId}`} className="text-sm text-accent hover:underline">
           Back to profile
         </Link>
         <p className="mt-4 text-stone-500">No submission available.</p>
@@ -113,7 +113,7 @@ export default function FeedbackViewPage() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <Link to={`/mentor/learner/${learnerId}`} className="text-sm text-accent hover:underline">
+        <Link to={`/learners/${learnerId}`} className="text-sm text-accent hover:underline">
           Back to {learner.name}
         </Link>
         <button onClick={handleResolve} disabled={resolved} className="btn-primary">

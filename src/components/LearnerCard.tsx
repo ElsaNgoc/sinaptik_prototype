@@ -8,7 +8,7 @@ export default function LearnerCard({ learner }: { learner: Learner }) {
 
   return (
     <Link
-      to={`/mentor/learner/${learner.id}`}
+      to={`/learners/${learner.id}`}
       className="block border border-stone-200 bg-white p-3 transition hover:border-stone-400"
     >
       <div className="flex items-start justify-between gap-2">

@@ -30,7 +30,7 @@ export default function MentorHeader() {
 
   const location = useLocation()
 
-  const onChat = location.pathname.startsWith('/mentor/chat')
+  const onChat = location.pathname.startsWith('/chat')
 
   const chatBadge = formatBadgeCount(getUnreadChatCount(conversations))
 
@@ -42,7 +42,7 @@ export default function MentorHeader() {
 
       <Link
 
-        to="/mentor/chat"
+        to="/chat"
 
         className={`relative rounded p-1.5 transition hover:bg-stone-100 ${onChat ? 'bg-stone-200' : ''}`}
 

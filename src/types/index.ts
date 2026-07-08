@@ -171,6 +171,13 @@ export interface StructureQuestion {
   prompt: string
   answer: string
   maxScore: number
+  /** Pre-computed AI grading suggestion for mentor review. */
+  aiSuggestion?: AiMarkingSuggestion
+}
+
+export interface AiMarkingSuggestion {
+  score: number
+  feedback: string
 }
 
 export interface MarkingQuiz {

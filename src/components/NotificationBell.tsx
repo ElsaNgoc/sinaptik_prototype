@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { getNotificationRoute, getRecentNotifications, formatBadgeCount, getUnreadNotificationCount } from '../utils/mockDataHelpers'
-import { getNotificationTypeStyle, READ_NOTIFICATION_ROW } from '../utils/notificationStyles'
+import { getNotificationTypeStyle } from '../utils/notificationStyles'
 import { NOTIFICATIONS_RETURN } from '../utils/taskNavigation'
 import type { Notification } from '../types'
 
@@ -30,7 +30,10 @@ export default function NotificationBell() {
 
   const unread = getUnreadNotificationCount(notifications)
   const unreadBadge = formatBadgeCount(unread)
-  const recent = getRecentNotifications(notifications, 5)
+  const unreadRecent = getRecentNotifications(
+    notifications.filter((n) => !n.read),
+    5
+  )
 
   useEffect(() => {
     if (!open) return
@@ -82,33 +85,28 @@ export default function NotificationBell() {
             </p>
           </div>
 
-          {recent.length === 0 ? (
-            <p className="px-4 py-6 text-center text-sm text-stone-500">No notifications.</p>
+          {unreadRecent.length === 0 ? (
+            <p className="px-4 py-6 text-center text-sm text-stone-500">No unread notifications.</p>
           ) : (
             <ul className="max-h-80 divide-y divide-stone-100 overflow-y-auto">
-              {recent.map((n) => {
+              {unreadRecent.map((n) => {
                 const typeStyle = getNotificationTypeStyle(n.type)
-                const rowStyle = n.read ? READ_NOTIFICATION_ROW : typeStyle
                 return (
                 <li key={n.id}>
                   <button
                     type="button"
                     onClick={() => handleSelect(n)}
-                    className={`w-full border-l-4 px-4 py-3 text-left transition ${rowStyle.border} ${rowStyle.rowBg} ${
-                      n.read ? 'hover:bg-stone-50' : 'hover:brightness-95'
-                    }`}
+                    className={`w-full border-l-4 px-4 py-3 text-left transition hover:brightness-95 ${typeStyle.border} ${typeStyle.rowBg}`}
                   >
                     <div className="flex items-center gap-2">
-                      <p className={`text-sm font-medium ${n.read ? 'text-stone-500' : 'text-stone-900'}`}>
+                      <p className="text-sm font-medium text-stone-900">
                         {n.learnerName}
                       </p>
-                      {!n.read && (
-                        <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${typeStyle.badge}`}>
-                          {typeStyle.label}
-                        </span>
-                      )}
+                      <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${typeStyle.badge}`}>
+                        {typeStyle.label}
+                      </span>
                     </div>
-                    <p className={`mt-0.5 line-clamp-2 text-xs ${n.read ? 'text-stone-400' : 'text-stone-700'}`}>
+                    <p className="mt-0.5 line-clamp-2 text-xs text-stone-700">
                       {n.message}
                     </p>
                     <p className="mt-1 text-xs text-stone-400">{formatNotificationDate(n.date)}</p>
@@ -122,7 +120,7 @@ export default function NotificationBell() {
             type="button"
             onClick={() => {
               setOpen(false)
-              navigate('/mentor/notifications')
+              navigate('/notifications')
             }}
             className="w-full border-t border-stone-200 py-2.5 text-sm font-medium text-accent transition hover:bg-stone-50"
           >

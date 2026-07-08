@@ -7,12 +7,20 @@ import {
   getCalendarDayStatus,
   groupTasksByCourseModule,
   getTaskRoute,
+  type CalendarDayStatus,
 } from '../utils/mockDataHelpers'
 import { TASKS_RETURN } from '../utils/taskNavigation'
 import type { MentorTask } from '../types'
 
+function dotColor(status: CalendarDayStatus, selected: boolean): string {
+  if (status === 'complete') return selected ? 'bg-emerald-300' : 'bg-emerald-600'
+  if (status === 'upcoming') return selected ? 'bg-amber-300' : 'bg-amber-500'
+  return selected ? 'bg-red-300' : 'bg-red-600'
+}
+
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
-const ANCHOR = new Date('2026-07-06T12:00:00+07:00')
+const ANCHOR = new Date('2026-07-08T12:00:00+07:00')
+const TODAY_ISO = '2026-07-08'
 
 function formatIsoDate(year: number, month: number, day: number) {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
@@ -37,9 +45,9 @@ export default function MentorTasksPage() {
   const { tasks } = useApp()
   const [viewYear, setViewYear] = useState(2026)
   const [viewMonth, setViewMonth] = useState(6)
-  const [selectedDate, setSelectedDate] = useState(formatIsoDate(2026, 6, 6))
+  const [selectedDate, setSelectedDate] = useState(TODAY_ISO)
 
-  const dayStatusByDate = useMemo(() => getCalendarDayStatus(tasks), [tasks])
+  const dayStatusByDate = useMemo(() => getCalendarDayStatus(tasks, TODAY_ISO), [tasks])
   const dayTasks = useMemo(() => getTasksForDate(tasks, selectedDate), [tasks, selectedDate])
 
   const submissionGroups = useMemo(() => {
@@ -111,6 +119,7 @@ export default function MentorTasksPage() {
                 const iso = formatIsoDate(viewYear, viewMonth, day)
                 const selected = iso === selectedDate
                 const dayStatus = dayStatusByDate.get(iso)
+                const today = isToday(day)
                 return (
                   <button
                     key={iso}
@@ -118,30 +127,40 @@ export default function MentorTasksPage() {
                     onClick={() => setSelectedDate(iso)}
                     className={`relative flex h-9 flex-col items-center justify-center rounded-full text-sm transition ${
                       selected
-                        ? 'bg-stone-800 text-white'
-                        : isToday(day)
-                          ? 'bg-stone-200 text-stone-900'
+                        ? 'bg-stone-800 font-semibold text-white'
+                        : today
+                          ? 'font-semibold text-stone-900 ring-1 ring-inset ring-stone-400 hover:bg-stone-100'
                           : 'text-stone-700 hover:bg-stone-100'
                     }`}
                   >
                     {day}
                     {dayStatus && (
                       <span
-                        className={`absolute bottom-0.5 h-1.5 w-1.5 rounded-full ${
-                          dayStatus === 'complete'
-                            ? selected
-                              ? 'bg-emerald-300'
-                              : 'bg-emerald-600'
-                            : selected
-                              ? 'bg-red-300'
-                              : 'bg-red-600'
-                        }`}
+                        className={`absolute bottom-0.5 h-1.5 w-1.5 rounded-full ${dotColor(
+                          dayStatus,
+                          selected
+                        )}`}
                         aria-hidden
                       />
                     )}
                   </button>
                 )
               })}
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 border-t border-stone-200 pt-3 text-xs text-stone-500">
+              <span className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-red-600" aria-hidden />
+                Due
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden />
+                Upcoming
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" aria-hidden />
+                Done
+              </span>
             </div>
           </div>
 

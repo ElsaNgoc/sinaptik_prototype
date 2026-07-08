@@ -27,25 +27,15 @@ export default function MentorLayout() {
 
 
   const navItems = [
-
-    { to: '/mentor', label: 'Dashboard', end: true },
-
-    { to: '/mentor/tasks', label: 'Tasks', badge: formatBadgeCount(pendingTasks) },
-
-    { to: '/mentor/learners', label: 'Learners' },
-
+    { to: '/', label: 'Dashboard', end: true },
+    { to: '/tasks', label: 'Tasks', badge: formatBadgeCount(pendingTasks) },
+    { to: '/learners', label: 'Learners' },
     {
-
-      to: '/mentor/notifications',
-
+      to: '/notifications',
       label: 'Inbox',
-
       badge: formatBadgeCount(unreadNotifications),
-
     },
-
-    { to: '/mentor/programs', label: 'Course catalog' },
-
+    { to: '/programs', label: 'Course catalog' },
   ]
 
 

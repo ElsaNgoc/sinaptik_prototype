@@ -167,7 +167,7 @@ export default function MentorLearnersPage() {
                   </td>
                   <td className="px-4 py-3">
                     <Link
-                      to={`/mentor/learner/${learner.id}`}
+                      to={`/learners/${learner.id}`}
                       className="text-accent hover:underline"
                     >
                       View

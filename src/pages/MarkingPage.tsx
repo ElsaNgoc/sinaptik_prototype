@@ -10,6 +10,8 @@ import CommentBox, {
   type MentionableUser,
 } from '../components/CommentBox'
 import { getMarkingQuiz, getMcqAutoScore } from '../data/markingQuizData'
+import { getAiMarkingSuggestion } from '../data/aiMarkingSuggestions'
+import AiMarkingPanel from '../components/AiMarkingPanel'
 import type { McqQuestion, StructureQuestion } from '../types'
 
 type MarkingTab = 'mcq' | 'structure'
@@ -137,8 +139,10 @@ function StructureQuestionCard({
   question,
   score,
   saved,
+  aiAccepted,
   onScoreChange,
   onSaveScore,
+  onAcceptAi,
   mentionables,
   author,
   learnerName,
@@ -148,8 +152,10 @@ function StructureQuestionCard({
   question: StructureQuestion
   score: string
   saved: boolean
+  aiAccepted: boolean
   onScoreChange: (value: string) => void
   onSaveScore: () => void
+  onAcceptAi: () => void
   mentionables: MentionableUser[]
   author: { name: string; avatar: string }
   learnerName: string
@@ -163,6 +169,7 @@ function StructureQuestionCard({
 }) {
   const answerRef = useRef<HTMLDivElement>(null)
   const [selection, setSelection] = useState<{ text: string; top: number } | null>(null)
+  const aiSuggestion = useMemo(() => getAiMarkingSuggestion(question), [question])
 
   const inlineComments = comments.filter((c) => c.selectedText)
   const generalComments = comments.filter((c) => !c.selectedText)
@@ -203,96 +210,109 @@ function StructureQuestionCard({
           Q{question.number}. {question.prompt}
         </p>
       </div>
-      <div className="relative border-b border-stone-200 px-4 py-4">
-        <p className="mb-2 text-xs text-stone-500">Highlight text in the answer to comment.</p>
-        <div ref={answerRef} onMouseUp={handleMouseUp} className="relative">
-          {renderAnswerWithHighlights(question.answer, comments)}
+      <div className="grid gap-0 lg:grid-cols-[1fr_280px]">
+        <div className="min-w-0">
+          <div className="relative border-b border-stone-200 px-4 py-4">
+            <p className="mb-2 text-xs text-stone-500">Highlight text in the answer to comment.</p>
+            <div ref={answerRef} onMouseUp={handleMouseUp} className="relative">
+              {renderAnswerWithHighlights(question.answer, comments)}
 
-          {selection && (
-            <div className="absolute z-20 w-full max-w-md" style={{ top: selection.top, left: 0 }}>
-              <CommentBox
-                mentionables={mentionables}
-                author={author}
-                contextLabel={selection.text}
-                compact
-                onSubmit={(text, mentions, ctx) =>
-                  handleAddComment(text, mentions, ctx, selection.top)
-                }
-                onCancel={() => setSelection(null)}
-              />
+              {selection && (
+                <div className="absolute z-20 w-full max-w-md" style={{ top: selection.top, left: 0 }}>
+                  <CommentBox
+                    mentionables={mentionables}
+                    author={author}
+                    contextLabel={selection.text}
+                    compact
+                    onSubmit={(text, mentions, ctx) =>
+                      handleAddComment(text, mentions, ctx, selection.top)
+                    }
+                    onCancel={() => setSelection(null)}
+                  />
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
 
-      <div className="space-y-6 px-4 py-5">
-        <div>
-          <p className="text-sm font-medium text-stone-900">Score</p>
-          <div className="mt-2 flex items-center gap-2">
-            <input
-              type="number"
-              min={0}
-              max={question.maxScore}
-              value={score}
-              onChange={(e) => onScoreChange(e.target.value)}
-              placeholder="—"
-              className="w-20 rounded-md border border-stone-300 px-3 py-2 text-center font-serif text-lg focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-            />
-            <span className="text-sm text-stone-500">/ {question.maxScore}</span>
-            <button
-              type="button"
-              onClick={onSaveScore}
-              disabled={score.trim() === ''}
-              className={`flex h-9 w-9 items-center justify-center rounded-md border transition ${
-                saved
-                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                  : 'border-stone-300 bg-white text-stone-600 hover:bg-stone-50'
-              }`}
-              aria-label="Save score"
-              title="Save score"
-            >
-              <CheckIcon />
-            </button>
+          <div className="space-y-6 px-4 py-5">
+            <div>
+              <p className="text-sm font-medium text-stone-900">Score</p>
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  type="number"
+                  min={0}
+                  max={question.maxScore}
+                  value={score}
+                  onChange={(e) => onScoreChange(e.target.value)}
+                  placeholder="—"
+                  className="w-20 rounded-md border border-stone-300 px-3 py-2 text-center font-serif text-lg focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                />
+                <span className="text-sm text-stone-500">/ {question.maxScore}</span>
+                <button
+                  type="button"
+                  onClick={onSaveScore}
+                  disabled={score.trim() === ''}
+                  className={`flex h-9 w-9 items-center justify-center rounded-md border transition ${
+                    saved
+                      ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                      : 'border-stone-300 bg-white text-stone-600 hover:bg-stone-50'
+                  }`}
+                  aria-label="Save score"
+                  title="Save score"
+                >
+                  <CheckIcon />
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-medium text-stone-900">Comment</p>
+              <p className="mt-1 text-xs text-stone-600">
+                Type @ to tag {learnerName} or another mentor.
+              </p>
+              <div className="mt-3">
+                <CommentBox
+                  mentionables={mentionables}
+                  author={author}
+                  placeholder="Add comment..."
+                  onSubmit={(text, mentions) => onAddComment(text, mentions)}
+                />
+              </div>
+            </div>
+
+            {comments.length > 0 && (
+              <div>
+                <p className="text-sm font-medium text-stone-900">Comments ({comments.length})</p>
+                <ul className="mt-3 space-y-2">
+                  {[...inlineComments, ...generalComments].map((c) => (
+                    <li key={c.id} className="border border-stone-200 bg-stone-50 p-3 text-sm">
+                      <p className="text-xs text-stone-500">
+                        {c.authorName}
+                        {c.selectedText && (
+                          <>
+                            {' '}
+                            · On &quot;{c.selectedText.slice(0, 40)}
+                            {c.selectedText.length > 40 ? '…' : ''}&quot;
+                          </>
+                        )}
+                      </p>
+                      <p className="mt-1 text-stone-800">{renderCommentText(c.text)}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
 
-        <div>
-          <p className="text-sm font-medium text-stone-900">Comment</p>
-          <p className="mt-1 text-xs text-stone-600">
-            Type @ to tag {learnerName} or another mentor.
-          </p>
-          <div className="mt-3">
-            <CommentBox
-              mentionables={mentionables}
-              author={author}
-              placeholder="Add comment..."
-              onSubmit={(text, mentions) => onAddComment(text, mentions)}
-            />
-          </div>
+        <div className="border-t border-stone-200 bg-stone-50/40 p-4 lg:border-l lg:border-t-0">
+          <AiMarkingPanel
+            suggestion={aiSuggestion}
+            maxScore={question.maxScore}
+            accepted={aiAccepted}
+            onAccept={onAcceptAi}
+          />
         </div>
-
-        {comments.length > 0 && (
-          <div>
-            <p className="text-sm font-medium text-stone-900">Comments ({comments.length})</p>
-            <ul className="mt-3 space-y-2">
-              {[...inlineComments, ...generalComments].map((c) => (
-                <li key={c.id} className="border border-stone-200 bg-stone-50 p-3 text-sm">
-                  <p className="text-xs text-stone-500">
-                    {c.authorName}
-                    {c.selectedText && (
-                      <>
-                        {' '}
-                        · On &quot;{c.selectedText.slice(0, 40)}
-                        {c.selectedText.length > 40 ? '…' : ''}&quot;
-                      </>
-                    )}
-                  </p>
-                  <p className="mt-1 text-stone-800">{renderCommentText(c.text)}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
     </article>
   )
@@ -331,6 +351,7 @@ export default function MarkingPage() {
   const [structureScores, setStructureScores] = useState<Record<string, string>>({})
   const [savedScores, setSavedScores] = useState<Record<string, boolean>>({})
   const [structureComments, setStructureComments] = useState<Record<string, CommentEntry[]>>({})
+  const [aiAccepted, setAiAccepted] = useState<Record<string, boolean>>({})
 
   const addStructureComment = (
     questionId: string,
@@ -355,6 +376,34 @@ export default function MarkingPage() {
         },
       ],
     }))
+  }
+
+  const acceptAiMarking = (question: StructureQuestion) => {
+    const suggestion = getAiMarkingSuggestion(question)
+    setStructureScores((prev) => ({ ...prev, [question.id]: String(suggestion.score) }))
+    setSavedScores((prev) => ({ ...prev, [question.id]: true }))
+    setAiAccepted((prev) => ({ ...prev, [question.id]: true }))
+    setStructureComments((prev) => {
+      const existing = prev[question.id] ?? []
+      const alreadyHasAi = existing.some((c) => c.id.startsWith('ai-'))
+      if (alreadyHasAi) return prev
+      return {
+        ...prev,
+        [question.id]: [
+          ...existing,
+          {
+            id: `ai-${question.id}`,
+            text: suggestion.feedback,
+            selectedText: '',
+            offsetTop: 0,
+            mentions: [],
+            authorName: 'AI Assistant',
+            authorAvatar: '',
+            createdAt: new Date().toISOString(),
+          },
+        ],
+      }
+    })
   }
 
   const mcqScore = quiz ? getMcqAutoScore(quiz) : { earned: 0, total: 0 }
@@ -399,13 +448,13 @@ export default function MarkingPage() {
 
     resolveSubmission(learner.id)
     completeTaskBySubmission(submission.id)
-    navigate('/mentor/tasks')
+    navigate('/tasks')
   }
 
   if (!submission || !learner || !quiz) {
     return (
       <div>
-        <BackButton to="/mentor/tasks" label="Back to tasks" />
+        <BackButton to="/tasks" label="Back to tasks" />
         <p className="mt-4 text-stone-500">Submission not found.</p>
       </div>
     )
@@ -413,7 +462,7 @@ export default function MarkingPage() {
 
   const back = resolveBackNavigation(
     location.state,
-    `/mentor/learner/${learner.id}`,
+    `/learners/${learner.id}`,
     `Back to ${learner.name}`
   )
 
@@ -469,7 +518,8 @@ export default function MarkingPage() {
       ) : (
         <div className="mt-6 space-y-6">
           <p className="text-sm text-stone-600">
-            Mentor-graded — enter a score and leave feedback for each open-ended answer.
+            Mentor-graded — AI suggests a score and feedback for each answer. Review, accept, or
+            edit before marking.
           </p>
           {quiz.structure.map((question) => (
             <StructureQuestionCard
@@ -477,9 +527,11 @@ export default function MarkingPage() {
               question={question}
               score={structureScores[question.id] ?? ''}
               saved={Boolean(savedScores[question.id])}
+              aiAccepted={Boolean(aiAccepted[question.id])}
               onScoreChange={(value) => {
                 setStructureScores((prev) => ({ ...prev, [question.id]: value }))
                 setSavedScores((prev) => ({ ...prev, [question.id]: false }))
+                setAiAccepted((prev) => ({ ...prev, [question.id]: false }))
               }}
               onSaveScore={() => {
                 const raw = structureScores[question.id]?.trim() ?? ''
@@ -488,6 +540,7 @@ export default function MarkingPage() {
                   setSavedScores((prev) => ({ ...prev, [question.id]: true }))
                 }
               }}
+              onAcceptAi={() => acceptAiMarking(question)}
               mentionables={mentionables}
               author={data.currentUser}
               learnerName={learner.name}
