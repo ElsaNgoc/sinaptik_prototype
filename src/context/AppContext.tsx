@@ -40,6 +40,7 @@ interface AppContextValue {
   reviewRequests: ReviewRequest[]
   testResults: Record<string, number>
   markNotificationRead: (notificationId: string) => void
+  markConversationRead: (learnerId: string) => void
   toggleTaskStatus: (taskId: string) => void
   completeTaskBySubmission: (submissionId: string) => void
   completeTaskByReviewRequest: (reviewRequestId: string) => void
@@ -85,6 +86,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [reviewRequests, setReviewRequests] = useState<ReviewRequest[]>(
     rawData.reviewRequests as ReviewRequest[]
   )
+  const [conversations, setConversations] = useState<ChatConversation[]>(
+    rawData.conversations as ChatConversation[]
+  )
 
   const dashboardAnalytics = useMemo(
     (): DashboardAnalytics => ({
@@ -101,6 +105,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const markNotificationRead = useCallback((notificationId: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
+    )
+  }, [])
+
+  const markConversationRead = useCallback((learnerId: string) => {
+    setConversations((prev) =>
+      prev.map((c) => (c.learnerId === learnerId ? { ...c, unreadCount: 0 } : c))
     )
   }, [])
 
@@ -262,11 +272,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         skillTests,
         tasks,
         notifications,
-        conversations: rawData.conversations as ChatConversation[],
+        conversations,
         reviewRequests,
         testResults,
         saveTestResult,
         markNotificationRead,
+        markConversationRead,
         toggleTaskStatus,
         completeTaskBySubmission,
         completeTaskByReviewRequest,

@@ -211,12 +211,19 @@ export function searchLearners(learners: Learner[], query: string): Learner[] {
 export function buildChatLearnerList(
   conversations: ChatConversation[],
   learners: Learner[]
-): { learnerId: string; name: string; courseLabel: string; lastMessage: string }[] {
+): {
+  learnerId: string
+  name: string
+  courseLabel: string
+  lastMessage: string
+  unreadCount: number
+}[] {
   const fromConversations = conversations.map((c) => ({
     learnerId: c.learnerId,
     name: c.learnerName,
     courseLabel: c.courseLabel,
     lastMessage: c.lastMessage,
+    unreadCount: c.unreadCount,
   }))
 
   const known = new Set(fromConversations.map((c) => c.learnerId))
@@ -227,9 +234,13 @@ export function buildChatLearnerList(
       name: l.name,
       courseLabel: l.enrollmentLabel,
       lastMessage: '',
+      unreadCount: 0,
     }))
 
-  return [...fromConversations, ...extras]
+  return [...fromConversations, ...extras].sort((a, b) => {
+    if (b.unreadCount !== a.unreadCount) return b.unreadCount - a.unreadCount
+    return a.name.localeCompare(b.name)
+  })
 }
 
 export function getNotificationRoute(

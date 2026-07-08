@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import BackButton from '../components/BackButton'
-import { buildChatLearnerList } from '../utils/mockDataHelpers'
+import LearnerProfileDetail from '../components/LearnerProfileDetail'
+import { buildChatLearnerList, formatBadgeCount } from '../utils/mockDataHelpers'
 import { resolveBackNavigation } from '../utils/taskNavigation'
 
 import NotificationBell from '../components/NotificationBell'
@@ -21,25 +22,51 @@ function ChatHeaderIcons() {
 }
 
 export default function MentorChatPage() {
-  const { data, conversations } = useApp()
+  const { data, conversations, markConversationRead } = useApp()
   const { learnerId: paramLearnerId } = useParams<{ learnerId?: string }>()
   const location = useLocation()
 
-  const learnerList = useMemo(
-    () => buildChatLearnerList(conversations, data.learners.filter((l) => l.assignedMentor.id === data.currentUser.id)),
-    [conversations, data.learners, data.currentUser.id]
+  const myLearners = useMemo(
+    () => data.learners.filter((l) => l.assignedMentor.id === data.currentUser.id),
+    [data.learners, data.currentUser.id]
   )
 
-  const activeId = paramLearnerId ?? conversations[0]?.learnerId ?? learnerList[0]?.learnerId
-  const activeConversation = conversations.find((c) => c.learnerId === activeId)
-  const activeLearner = data.learners.find((l) => l.id === activeId)
+  const learnerList = useMemo(
+    () => buildChatLearnerList(conversations, myLearners),
+    [conversations, myLearners]
+  )
+
+  const activeId = paramLearnerId
+  const activeConversation = activeId
+    ? conversations.find((c) => c.learnerId === activeId)
+    : undefined
+  const activeLearner = activeId ? data.learners.find((l) => l.id === activeId) : undefined
 
   const [draft, setDraft] = useState('')
+  const [profileOpen, setProfileOpen] = useState(false)
 
   const headerLabel =
     activeConversation?.courseLabel ?? activeLearner?.enrollmentLabel ?? 'Learner chat'
 
   const back = resolveBackNavigation(location.state, '/', 'Back to dashboard')
+
+  const activityLogs = useMemo(
+    () =>
+      activeLearner
+        ? data.activityLogs
+            .filter((log) => log.learnerId === activeLearner.id)
+            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        : [],
+    [data.activityLogs, activeLearner]
+  )
+
+  useEffect(() => {
+    if (paramLearnerId) markConversationRead(paramLearnerId)
+  }, [paramLearnerId, markConversationRead])
+
+  useEffect(() => {
+    setProfileOpen(false)
+  }, [paramLearnerId])
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-paper">
@@ -52,13 +79,16 @@ export default function MentorChatPage() {
       </div>
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
-        <aside className="w-64 shrink-0 overflow-y-auto border-r border-stone-300 bg-stone-50">
+        <aside className="w-72 shrink-0 overflow-y-auto border-r border-stone-300 bg-stone-50">
           <p className="border-b border-stone-200 px-4 py-3 text-xs font-medium uppercase tracking-wide text-stone-500">
             Learners
           </p>
           <ul>
             {learnerList.map((item) => {
               const active = item.learnerId === activeId
+              const unreadBadge = formatBadgeCount(item.unreadCount)
+              const hasUnread = item.unreadCount > 0
+
               return (
                 <li key={item.learnerId}>
                   <Link
@@ -66,7 +96,9 @@ export default function MentorChatPage() {
                     className={`flex gap-3 border-l-2 px-3 py-3 transition ${
                       active
                         ? 'border-stone-900 bg-white'
-                        : 'border-transparent hover:bg-stone-100'
+                        : hasUnread
+                          ? 'border-transparent bg-amber-50/60 hover:bg-amber-50'
+                          : 'border-transparent hover:bg-stone-100'
                     }`}
                   >
                     <img
@@ -74,9 +106,31 @@ export default function MentorChatPage() {
                       alt=""
                       className="h-9 w-9 shrink-0 rounded-full border border-stone-300"
                     />
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-stone-900">{item.name}</p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <p
+                          className={`truncate text-sm ${
+                            hasUnread ? 'font-semibold text-stone-900' : 'font-medium text-stone-900'
+                          }`}
+                        >
+                          {item.name}
+                        </p>
+                        {unreadBadge && (
+                          <span className="flex h-5 min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-semibold text-white">
+                            {unreadBadge}
+                          </span>
+                        )}
+                      </div>
                       <p className="truncate text-xs text-stone-500">{item.courseLabel}</p>
+                      {item.lastMessage && (
+                        <p
+                          className={`mt-0.5 truncate text-xs ${
+                            hasUnread ? 'font-medium text-stone-700' : 'text-stone-400'
+                          }`}
+                        >
+                          {item.lastMessage}
+                        </p>
+                      )}
                     </div>
                   </Link>
                 </li>
@@ -85,62 +139,79 @@ export default function MentorChatPage() {
           </ul>
         </aside>
 
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          {activeConversation ? (
-            <>
-              <div className="flex shrink-0 items-center gap-3 border-b border-stone-200 px-6 py-4">
-                <img
-                  src={`https://i.pravatar.cc/150?u=${activeConversation.learnerId}`}
-                  alt=""
-                  className="h-10 w-10 rounded-full border border-stone-300"
-                />
-                <div>
-                  <p className="font-medium text-stone-900">{activeConversation.learnerName}</p>
-                  <p className="text-xs text-stone-500">{headerLabel}</p>
-                </div>
-              </div>
-
-              <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-6">
-                {activeConversation.messages.map((msg) => {
-                  const isMentor = msg.senderRole === 'MENTOR'
-                  return (
-                    <div
-                      key={msg.id}
-                      className={`flex ${isMentor ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`max-w-lg rounded-lg px-4 py-2.5 text-sm leading-relaxed ${
-                          isMentor
-                            ? 'bg-stone-200 text-stone-900'
-                            : 'border border-stone-300 bg-white text-stone-800'
-                        }`}
-                      >
-                        {msg.text}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-
-              <div className="shrink-0 border-t border-stone-300 bg-paper p-4">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={draft}
-                    onChange={(e) => setDraft(e.target.value)}
-                    placeholder="Type message..."
-                    className="flex-1 rounded-md border border-stone-300 bg-white px-3 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+        <div className="flex min-h-0 min-w-0 flex-1">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+            {activeConversation && activeLearner ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setProfileOpen((open) => !open)}
+                  className={`flex w-full shrink-0 items-center gap-3 border-b border-stone-200 px-6 py-4 text-left transition hover:bg-stone-50 ${
+                    profileOpen ? 'bg-stone-50' : ''
+                  }`}
+                >
+                  <img
+                    src={activeLearner.avatar}
+                    alt=""
+                    className="h-10 w-10 rounded-full border border-stone-300"
                   />
-                  <button type="button" className="btn-primary px-4" aria-label="Send message">
-                    Send
-                  </button>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-stone-900">{activeConversation.learnerName}</p>
+                    <p className="text-xs text-stone-500">{headerLabel}</p>
+                  </div>
+                  <span className="shrink-0 text-xs text-accent">
+                    {profileOpen ? 'Hide profile' : 'View profile'}
+                  </span>
+                </button>
+
+                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-6">
+                  {activeConversation.messages.map((msg) => {
+                    const isMentor = msg.senderRole === 'MENTOR'
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`flex ${isMentor ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
+                          className={`max-w-lg rounded-lg px-4 py-2.5 text-sm leading-relaxed ${
+                            isMentor
+                              ? 'bg-stone-200 text-stone-900'
+                              : 'border border-stone-300 bg-white text-stone-800'
+                          }`}
+                        >
+                          {msg.text}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
+
+                <div className="shrink-0 border-t border-stone-300 bg-paper p-4">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={draft}
+                      onChange={(e) => setDraft(e.target.value)}
+                      placeholder="Type message..."
+                      className="flex-1 rounded-md border border-stone-300 bg-white px-3 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                    />
+                    <button type="button" className="btn-primary px-4" aria-label="Send message">
+                      Send
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-1 items-center justify-center text-sm text-stone-500">
+                Select a learner to view messages.
               </div>
-            </>
-          ) : (
-            <div className="flex flex-1 items-center justify-center text-sm text-stone-500">
-              Select a learner to view messages.
-            </div>
+            )}
+          </div>
+
+          {profileOpen && activeLearner && (
+            <aside className="w-[360px] shrink-0 overflow-y-auto border-l border-stone-300 bg-paper p-4">
+              <LearnerProfileDetail learner={activeLearner} logs={activityLogs} compact />
+            </aside>
           )}
         </div>
       </div>
