@@ -1,6 +1,10 @@
 import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from 'react'
 import rawData from '../../mock_data.json'
-import { generateLearners, computeStatusBreakdown } from '../data/generateLearners'
+import {
+  generateLearners,
+  computeStatusBreakdown,
+  buildActivityLogs,
+} from '../data/generateLearners'
 import { mentors, programs, fields, skillTests } from '../data/sinaptikCatalog'
 import type {
   AppData,
@@ -64,8 +68,8 @@ const initialLearners = generateLearners(rawData.cohort.totalLearners)
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [learners, setLearners] = useState<Learner[]>(initialLearners)
-  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>(
-    rawData.activityLogs as ActivityLog[]
+  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>(() =>
+    buildActivityLogs(initialLearners, rawData.activityLogs as ActivityLog[])
   )
   const [learnerPendingReview, setLearnerPendingReview] = useState(false)
   const [learnerCompleted, setLearnerCompleted] = useState(false)

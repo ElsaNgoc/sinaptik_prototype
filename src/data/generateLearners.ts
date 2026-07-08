@@ -1,4 +1,4 @@
-import type { DropOffRisk, Learner, LearnerModule, LearnerStatus } from '../types'
+import type { ActivityLog, DropOffRisk, Learner, LearnerModule, LearnerStatus } from '../types'
 import { bootcampModules, mentors } from './sinaptikCatalog'
 
 const COHORT_LABEL = 'Data Analytics Bootcamp — Batch 7 (2026)'
@@ -437,6 +437,139 @@ export function generateLearners(count = 186): Learner[] {
   const pujaLearners = PUJA_ROSTER.map(rosterToLearner)
   const others = generateOtherLearners(count - pujaLearners.length, pujaLearners.length)
   return [...pujaLearners, ...others]
+}
+
+function hoursAgo(days: number, extraHours: number): string {
+  return new Date(ANCHOR_MS - days * 86400000 - extraHours * 3600000).toISOString()
+}
+
+/**
+ * Synthesize an activity timeline for a learner from their status/metrics.
+ * Used to fill in learners that don't have curated logs in mock_data.json,
+ * so every profile shows a meaningful history.
+ */
+function buildLearnerActivity(learner: Learner): ActivityLog[] {
+  const base = learner.lastActive
+  const logs: ActivityLog[] = []
+  const days = Math.max(
+    1,
+    Math.round((ANCHOR_MS - new Date(base).getTime()) / 86400000)
+  )
+  const mk = (
+    suffix: string,
+    type: ActivityLog['type'],
+    message: string,
+    offsetDays: number,
+    requiresAction = false
+  ): ActivityLog => ({
+    id: `log-${learner.id}-${suffix}`,
+    learnerId: learner.id,
+    type,
+    message,
+    timestamp: hoursAgo(offsetDays, 0),
+    requiresAction,
+  })
+
+  switch (learner.status) {
+    case 'PENDING_MENTOR':
+      logs.push(
+        mk(
+          'sub',
+          'SUBMISSION',
+          `${learner.name} submitted work in ${learner.currentModule} — awaiting your review.`,
+          days,
+          true
+        ),
+        mk(
+          'log',
+          'SYSTEM',
+          `${learner.name} logged in and opened ${learner.currentModule}.`,
+          days + 1
+        )
+      )
+      break
+    case 'AT_RISK':
+      logs.push(
+        mk(
+          'alert',
+          'AI_ALERT',
+          `AI Alert: ${learner.name} drop-off risk ${learner.dropOffRisk} — engagement ${learner.engagementScore}/100.`,
+          days
+        ),
+        mk(
+          'sub',
+          'SUBMISSION',
+          `${learner.name} last submitted in ${learner.currentModule} — scored ${learner.avgScore}/100.`,
+          days + 3
+        )
+      )
+      break
+    case 'STUCK':
+      logs.push(
+        mk(
+          'alert',
+          'AI_ALERT',
+          `AI Alert: ${learner.name} inactive for ${days} days on ${learner.currentModule}. Status: Stuck.`,
+          days
+        ),
+        mk(
+          'log',
+          'SYSTEM',
+          `${learner.name} last active ${days} days ago.`,
+          days
+        )
+      )
+      break
+    case 'COMPLETED':
+      logs.push(
+        mk(
+          'done',
+          'SYSTEM',
+          `${learner.name} completed the program with final score ${learner.avgScore}/100. Certificate issued.`,
+          days
+        ),
+        mk(
+          'sub',
+          'SUBMISSION',
+          `${learner.name} submitted the final assignment — scored ${learner.avgScore}/100.`,
+          days + 2
+        )
+      )
+      break
+    default:
+      logs.push(
+        mk(
+          'sub',
+          'SUBMISSION',
+          `${learner.name} submitted work in ${learner.currentModule} — scored ${learner.avgScore}/100.`,
+          days
+        ),
+        mk(
+          'log',
+          'SYSTEM',
+          `${learner.name} is progressing on schedule in ${learner.currentModule}.`,
+          days + 2
+        )
+      )
+  }
+
+  return logs
+}
+
+/**
+ * Merge curated logs (from mock_data.json) with generated ones so that
+ * every learner has at least some activity. Curated logs win — we only
+ * synthesize for learners that have none.
+ */
+export function buildActivityLogs(
+  learners: Learner[],
+  curatedLogs: ActivityLog[]
+): ActivityLog[] {
+  const learnersWithLogs = new Set(curatedLogs.map((l) => l.learnerId))
+  const generated = learners
+    .filter((l) => !learnersWithLogs.has(l.id))
+    .flatMap(buildLearnerActivity)
+  return [...curatedLogs, ...generated]
 }
 
 export function computeStatusBreakdown(learners: Learner[]) {

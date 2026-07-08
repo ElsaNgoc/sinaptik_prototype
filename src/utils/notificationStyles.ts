@@ -20,11 +20,11 @@ type NotificationStyle = {
 const STYLES: Record<NotificationType, NotificationStyle> = {
   SUBMISSION: {
     label: NOTIFICATION_TYPE_LABELS.SUBMISSION,
-    rowBg: 'bg-blue-50',
-    rowBgHover: 'hover:bg-blue-50',
-    border: 'border-l-blue-500',
-    badge: 'bg-blue-100 text-blue-800',
-    dot: 'bg-blue-500',
+    rowBg: 'bg-amber-50',
+    rowBgHover: 'hover:bg-amber-50',
+    border: 'border-l-amber-500',
+    badge: 'bg-amber-100 text-amber-900',
+    dot: 'bg-amber-500',
   },
   MENTOR_REQUEST: {
     label: NOTIFICATION_TYPE_LABELS.MENTOR_REQUEST,

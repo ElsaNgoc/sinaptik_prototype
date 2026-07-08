@@ -121,19 +121,66 @@ export function sortNotificationsByDate(notifications: Notification[]): Notifica
   return [...notifications].sort((a, b) => b.date.localeCompare(a.date))
 }
 
+export type NotificationDateWithin =
+  | 'any'
+  | '1d'
+  | '3d'
+  | '1w'
+  | '2w'
+  | '1m'
+  | '1y'
+
+const DATE_WITHIN_DAYS: Record<Exclude<NotificationDateWithin, 'any'>, number> = {
+  '1d': 1,
+  '3d': 3,
+  '1w': 7,
+  '2w': 14,
+  '1m': 30,
+  '1y': 365,
+}
+
+function parseIsoDate(iso: string): Date {
+  return new Date(iso + 'T12:00:00')
+}
+
+/** Gmail-style: notifications on or before anchor, within N days lookback. */
+export function filterNotificationsByDateWithin(
+  notifications: Notification[],
+  within: NotificationDateWithin,
+  anchorDate: string
+): Notification[] {
+  if (within === 'any' || !anchorDate) return notifications
+
+  const anchor = parseIsoDate(anchorDate)
+  const days = DATE_WITHIN_DAYS[within]
+  const start = new Date(anchor)
+  start.setDate(start.getDate() - days)
+
+  return notifications.filter((n) => {
+    const d = parseIsoDate(n.date)
+    return d >= start && d <= anchor
+  })
+}
+
 export function getRecentNotifications(notifications: Notification[], limit = 5): Notification[] {
   return sortNotificationsByDate(notifications).slice(0, limit)
 }
 
 export function filterNotificationsByTab(
   notifications: Notification[],
-  tab: 'ALL' | 'MENTOR_REQUEST' | 'ASSIGNMENT_SUBMISSION'
+  tab: 'ALL' | 'GRADING' | 'AI_ALERT' | 'SYSTEM' | 'MENTOR_REQUEST' | 'ASSIGNMENT_SUBMISSION'
 ): Notification[] {
   if (tab === 'ALL') return notifications
-  if (tab === 'MENTOR_REQUEST') {
-    return notifications.filter((n) => n.type === 'MENTOR_REQUEST')
+  if (tab === 'GRADING' || tab === 'MENTOR_REQUEST' || tab === 'ASSIGNMENT_SUBMISSION') {
+    return notifications.filter((n) => n.type === 'SUBMISSION' || n.type === 'MENTOR_REQUEST')
   }
-  return notifications.filter((n) => n.type === 'SUBMISSION')
+  if (tab === 'AI_ALERT') {
+    return notifications.filter((n) => n.type === 'AI_ALERT')
+  }
+  if (tab === 'SYSTEM') {
+    return notifications.filter((n) => n.type === 'SYSTEM')
+  }
+  return notifications
 }
 
 export function searchLearners(learners: Learner[], query: string): Learner[] {
