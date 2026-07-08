@@ -64,9 +64,9 @@ export function getRiskColor(_risk: string): string {
   return 'text-stone-600'
 }
 
-export function formatTimestamp(iso: string): string {
+export function formatTimestamp(iso: string, dateLocale = 'en-US'): string {
   const date = new Date(iso)
-  return date.toLocaleString('en-US', {
+  return date.toLocaleString(dateLocale, {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
@@ -74,26 +74,19 @@ export function formatTimestamp(iso: string): string {
   })
 }
 
-export function formatRelativeTime(iso: string): string {
+type TranslateFn = (key: string, params?: Record<string, string | number>) => string
+
+export function formatRelativeTime(iso: string, t: TranslateFn): string {
   const diff = Date.now() - new Date(iso).getTime()
   const hours = Math.floor(diff / 3600000)
-  if (hours < 1) return 'Just now'
-  if (hours < 24) return `${hours}h ago`
+  if (hours < 1) return t('time.justNow')
+  if (hours < 24) return t('time.hoursAgo', { n: hours })
   const days = Math.floor(hours / 24)
-  return `${days}d ago`
+  return t('time.daysAgo', { n: days })
 }
 
-export function getActivityLabel(type: ActivityLog['type']): string {
-  switch (type) {
-    case 'AI_ALERT':
-      return 'Alert'
-    case 'MENTOR_REQUEST':
-      return 'Request'
-    case 'SUBMISSION':
-      return 'Submit'
-    default:
-      return 'System'
-  }
+export function getActivityLabel(type: ActivityLog['type'], t: TranslateFn): string {
+  return t(`activity.${type}`)
 }
 
 export function isSystemAlert(type: ActivityLog['type']): boolean {

@@ -1,4 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom'
+import { useLanguage } from '../context/LanguageContext'
+import { SidebarProvider, useSidebar } from '../context/SidebarContext'
 
 export interface SidebarNavItem {
   to: string
@@ -19,7 +21,15 @@ interface SidebarShellProps {
   belowTitle?: React.ReactNode
 }
 
-export default function SidebarShell({
+export default function SidebarShell(props: SidebarShellProps) {
+  return (
+    <SidebarProvider>
+      <SidebarShellInner {...props} />
+    </SidebarProvider>
+  )
+}
+
+function SidebarShellInner({
   title = 'Sinaptik',
   logoSrc,
   logoAlt,
@@ -30,31 +40,62 @@ export default function SidebarShell({
   footer,
   belowTitle,
 }: SidebarShellProps) {
+  const { isOpen, close } = useSidebar()
+  const { t } = useLanguage()
+
   return (
     <div className="flex min-h-screen bg-paper">
-      <aside className="flex w-56 shrink-0 flex-col border-r border-stone-300 bg-stone-100 md:w-60">
-        <div className="border-b border-stone-300 px-5 py-6">
-          {logoSrc ? (
-            <img
-              src={logoSrc}
-              alt={logoAlt ?? title}
-              className="h-8 w-auto max-w-full object-contain object-left mix-blend-multiply"
-            />
-          ) : (
-            <h1 className="font-serif text-lg font-semibold tracking-tight text-stone-900">
-              {title}
-            </h1>
-          )}
-          {belowTitle ?? <p className="mt-0.5 text-xs text-stone-600">{subtitle}</p>}
+      {isOpen && (
+        <button
+          type="button"
+          className="fixed inset-0 z-30 bg-stone-900/20 md:hidden"
+          aria-label={t('nav.closeMenu')}
+          onClick={close}
+        />
+      )}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 flex shrink-0 flex-col border-r border-stone-300 bg-stone-100 transition-all duration-200 ease-in-out ${
+          isOpen
+            ? 'w-60 translate-x-0 md:static'
+            : 'w-60 -translate-x-full md:static md:w-0 md:translate-x-0 md:overflow-hidden md:border-r-0'
+        }`}
+      >
+        <div className="flex items-start justify-between gap-2 border-b border-stone-300 px-5 py-6">
+          <div className="min-w-0 flex-1">
+            {logoSrc ? (
+              <img
+                src={logoSrc}
+                alt={logoAlt ?? title}
+                className="h-8 w-auto max-w-full object-contain object-left mix-blend-multiply"
+              />
+            ) : (
+              <h1 className="font-serif text-lg font-semibold tracking-tight text-stone-900">
+                {title}
+              </h1>
+            )}
+            {belowTitle ?? <p className="mt-0.5 text-xs text-stone-600">{subtitle}</p>}
+          </div>
+          <button
+            type="button"
+            onClick={close}
+            className="shrink-0 rounded p-1 text-stone-500 transition hover:bg-stone-200 hover:text-stone-900"
+            aria-label={t('nav.closeMenu')}
+          >
+            <CloseIcon />
+          </button>
         </div>
 
-        <nav className="flex-1 px-3 py-4">
+        <nav className="flex-1 overflow-y-auto px-3 py-4">
           <ul className="space-y-0.5">
             {navItems.map((item) => (
               <li key={item.to}>
                 <NavLink
                   to={item.to}
                   end={item.end}
+                  onClick={() => {
+                    if (window.matchMedia('(max-width: 767px)').matches) close()
+                  }}
                   className={({ isActive }) =>
                     `flex items-center justify-between border-l-2 px-3 py-2 text-sm transition ${
                       isActive
@@ -93,5 +134,13 @@ export default function SidebarShell({
         )}
       </div>
     </div>
+  )
+}
+
+function CloseIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
+    </svg>
   )
 }

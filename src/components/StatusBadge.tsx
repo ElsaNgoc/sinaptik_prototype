@@ -1,12 +1,14 @@
 import type { LearnerStatus } from '../types'
-import { getStatusColor, getStatusLabel } from '../utils/dashboard'
+import { getStatusColor } from '../utils/dashboard'
+import { useLanguage } from '../context/LanguageContext'
 
 export default function StatusBadge({ status }: { status: LearnerStatus }) {
+  const { t } = useLanguage()
   return (
     <span
       className={`inline-flex items-center border px-2 py-0.5 text-xs font-medium ${getStatusColor(status)}`}
     >
-      {getStatusLabel(status)}
+      {t(`status.${status}`)}
     </span>
   )
 }

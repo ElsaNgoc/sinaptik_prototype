@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
+import { useLanguage } from '../context/LanguageContext'
 import { formatTimestamp, getActivityLabel, isSystemAlert } from '../utils/dashboard'
 import type { ActivityLog, ActivityType } from '../types'
 
@@ -22,6 +23,7 @@ function sortByPriority(logs: ActivityLog[]): ActivityLog[] {
 
 export default function MentorAlertsPage() {
   const { data } = useApp()
+  const { t, dateLocale } = useLanguage()
   const { activityLogs, learners } = data
 
   const actionItems = useMemo(
@@ -75,12 +77,12 @@ export default function MentorAlertsPage() {
                           Action needed
                         </span>
                         <span className="text-xs uppercase text-amber-800/70">
-                          {getActivityLabel(log.type)}
+                          {getActivityLabel(log.type, t)}
                         </span>
                       </div>
                       <p className="mt-1 font-medium text-stone-900">{learner?.name}</p>
                       <p className="text-sm text-stone-600">{log.message}</p>
-                      <p className="text-xs text-stone-400">{formatTimestamp(log.timestamp)}</p>
+                      <p className="text-xs text-stone-400">{formatTimestamp(log.timestamp, dateLocale)}</p>
                     </div>
                     <Link
                       to={`/feedback/${log.learnerId}`}
@@ -132,7 +134,7 @@ export default function MentorAlertsPage() {
                       )}
                       <p className="font-medium text-stone-900">{learner?.name}</p>
                       <p className="text-sm text-stone-600">{log.message}</p>
-                      <p className="text-xs text-stone-400">{formatTimestamp(log.timestamp)}</p>
+                      <p className="text-xs text-stone-400">{formatTimestamp(log.timestamp, dateLocale)}</p>
                     </div>
                     <Link
                       to={`/learners/${log.learnerId}`}
@@ -175,13 +177,13 @@ export default function MentorAlertsPage() {
                       needsAttention ? 'font-medium text-amber-800' : 'text-stone-500'
                     }`}
                   >
-                    {getActivityLabel(log.type)}
+                    {getActivityLabel(log.type, t)}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm text-stone-800">
                       <strong>{learner?.name}</strong> — {log.message}
                     </p>
-                    <p className="text-xs text-stone-400">{formatTimestamp(log.timestamp)}</p>
+                    <p className="text-xs text-stone-400">{formatTimestamp(log.timestamp, dateLocale)}</p>
                   </div>
                   {needsAttention ? (
                     <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">

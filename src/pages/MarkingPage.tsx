@@ -1,8 +1,9 @@
 import { useMemo, useState, useRef, useCallback, type ReactNode } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
+import { useLanguage } from '../context/LanguageContext'
 import BackButton from '../components/BackButton'
-import { resolveBackNavigation } from '../utils/taskNavigation'
+import { resolveBackNavigation, useReturnNavigation } from '../utils/taskNavigation'
 import CommentBox, {
   buildMentionables,
   renderCommentText,
@@ -167,6 +168,7 @@ function StructureQuestionCard({
     offsetTop?: number
   ) => void
 }) {
+  const { t } = useLanguage()
   const answerRef = useRef<HTMLDivElement>(null)
   const [selection, setSelection] = useState<{ text: string; top: number } | null>(null)
   const aiSuggestion = useMemo(() => getAiMarkingSuggestion(question), [question])
@@ -213,7 +215,7 @@ function StructureQuestionCard({
       <div className="grid gap-0 lg:grid-cols-[1fr_280px]">
         <div className="min-w-0">
           <div className="relative border-b border-stone-200 px-4 py-4">
-            <p className="mb-2 text-xs text-stone-500">Highlight text in the answer to comment.</p>
+            <p className="mb-2 text-xs text-stone-500">{t('marking.highlight')}</p>
             <div ref={answerRef} onMouseUp={handleMouseUp} className="relative">
               {renderAnswerWithHighlights(question.answer, comments)}
 
@@ -236,7 +238,7 @@ function StructureQuestionCard({
 
           <div className="space-y-6 px-4 py-5">
             <div>
-              <p className="text-sm font-medium text-stone-900">Score</p>
+              <p className="text-sm font-medium text-stone-900">{t('marking.score')}</p>
               <div className="mt-2 flex items-center gap-2">
                 <input
                   type="number"
@@ -257,8 +259,8 @@ function StructureQuestionCard({
                       ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
                       : 'border-stone-300 bg-white text-stone-600 hover:bg-stone-50'
                   }`}
-                  aria-label="Save score"
-                  title="Save score"
+                  aria-label={t('marking.saveScore')}
+                  title={t('marking.saveScore')}
                 >
                   <CheckIcon />
                 </button>
@@ -266,15 +268,15 @@ function StructureQuestionCard({
             </div>
 
             <div>
-              <p className="text-sm font-medium text-stone-900">Comment</p>
+              <p className="text-sm font-medium text-stone-900">{t('marking.comment')}</p>
               <p className="mt-1 text-xs text-stone-600">
-                Type @ to tag {learnerName} or another mentor.
+                {t('marking.tagMentor', { name: learnerName })}
               </p>
               <div className="mt-3">
                 <CommentBox
                   mentionables={mentionables}
                   author={author}
-                  placeholder="Add comment..."
+                  placeholder={t('marking.addComment')}
                   onSubmit={(text, mentions) => onAddComment(text, mentions)}
                 />
               </div>
@@ -282,7 +284,9 @@ function StructureQuestionCard({
 
             {comments.length > 0 && (
               <div>
-                <p className="text-sm font-medium text-stone-900">Comments ({comments.length})</p>
+                <p className="text-sm font-medium text-stone-900">
+                  {t('marking.comments', { count: comments.length })}
+                </p>
                 <ul className="mt-3 space-y-2">
                   {[...inlineComments, ...generalComments].map((c) => (
                     <li key={c.id} className="border border-stone-200 bg-stone-50 p-3 text-sm">
@@ -291,8 +295,12 @@ function StructureQuestionCard({
                         {c.selectedText && (
                           <>
                             {' '}
-                            · On &quot;{c.selectedText.slice(0, 40)}
-                            {c.selectedText.length > 40 ? '…' : ''}&quot;
+                            ·{' '}
+                            {t('marking.onText', {
+                              text:
+                                c.selectedText.slice(0, 40) +
+                                (c.selectedText.length > 40 ? '…' : ''),
+                            })}
                           </>
                         )}
                       </p>
@@ -322,6 +330,8 @@ export default function MarkingPage() {
   const { submissionId } = useParams<{ submissionId: string }>()
   const { data, getSubmissionById, resolveSubmission, completeTaskBySubmission, saveSubmissionMentorGrading } =
     useApp()
+  const { t } = useLanguage()
+  const { tasksReturn, backToLearner } = useReturnNavigation()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -397,7 +407,7 @@ export default function MarkingPage() {
             selectedText: '',
             offsetTop: 0,
             mentions: [],
-            authorName: 'AI Assistant',
+            authorName: t('marking.aiAssistant'),
             authorAvatar: '',
             createdAt: new Date().toISOString(),
           },
@@ -431,7 +441,7 @@ export default function MarkingPage() {
     const mentorFeedback =
       generalComment?.text ??
       allComments[0]?.text ??
-      'Marked — see comments on structure questions.'
+      t('marking.markedFallback')
 
     saveSubmissionMentorGrading(submission.id, {
       mentorScore: structureTotal,
@@ -454,8 +464,8 @@ export default function MarkingPage() {
   if (!submission || !learner || !quiz) {
     return (
       <div>
-        <BackButton to="/tasks" label="Back to tasks" />
-        <p className="mt-4 text-stone-500">Submission not found.</p>
+        <BackButton to={tasksReturn.returnTo} label={tasksReturn.returnLabel} />
+        <p className="mt-4 text-stone-500">{t('marking.notFound')}</p>
       </div>
     )
   }
@@ -463,14 +473,14 @@ export default function MarkingPage() {
   const back = resolveBackNavigation(
     location.state,
     `/learners/${learner.id}`,
-    `Back to ${learner.name}`
+    backToLearner(learner.name)
   )
 
   return (
     <div>
       <BackButton to={back.to} label={back.label} />
 
-      <h1 className="page-title mt-4">Marking</h1>
+      <h1 className="page-title mt-4">{t('marking.title')}</h1>
       <p className="page-subtitle">
         {submission.assignmentTitle} · {submission.moduleTitle}
       </p>
@@ -487,7 +497,7 @@ export default function MarkingPage() {
                 : 'border-transparent text-stone-500 hover:text-stone-800'
             }`}
           >
-            Multiple Choice Questions
+            {t('marking.mcq')}
           </button>
           <button
             type="button"
@@ -498,7 +508,7 @@ export default function MarkingPage() {
                 : 'border-transparent text-stone-500 hover:text-stone-800'
             }`}
           >
-            Structure Questions
+            {t('marking.structure')}
           </button>
         </nav>
       </div>
@@ -506,9 +516,9 @@ export default function MarkingPage() {
       {tab === 'mcq' ? (
         <div className="mt-6 space-y-4">
           <p className="text-sm text-stone-600">
-            Auto-graded by the system —{' '}
+            {t('marking.autoGraded')}{' '}
             <span className="font-medium text-stone-900">
-              {mcqScore.earned}/{mcqScore.total} correct
+              {t('marking.correct', { earned: mcqScore.earned, total: mcqScore.total })}
             </span>
           </p>
           {quiz.multipleChoice.map((question) => (
@@ -517,10 +527,7 @@ export default function MarkingPage() {
         </div>
       ) : (
         <div className="mt-6 space-y-6">
-          <p className="text-sm text-stone-600">
-            Mentor-graded — AI suggests a score and feedback for each answer. Review, accept, or
-            edit before marking.
-          </p>
+          <p className="text-sm text-stone-600">{t('marking.mentorGraded')}</p>
           {quiz.structure.map((question) => (
             <StructureQuestionCard
               key={question.id}
@@ -560,7 +567,7 @@ export default function MarkingPage() {
           disabled={!allStructureScored}
           className="btn-primary min-w-[120px]"
         >
-          Mark
+          {t('marking.mark')}
         </button>
       </div>
     </div>

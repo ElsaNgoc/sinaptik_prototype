@@ -1,13 +1,14 @@
 import { type ReactNode, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
+import { useLanguage } from '../context/LanguageContext'
 import {
   groupLearnersByColumn,
   getMentorLearners,
   formatRelativeTime,
 } from '../utils/dashboard'
 import { getMentorDashboardKpis, getTaskRoute } from '../utils/mockDataHelpers'
-import { TASKS_RETURN } from '../utils/taskNavigation'
+import { useReturnNavigation } from '../utils/taskNavigation'
 import StatCard from '../components/StatCard'
 import StatusBadge from '../components/StatusBadge'
 import type { Learner, MentorTask } from '../types'
@@ -22,6 +23,8 @@ function pendingTasksSorted(tasks: MentorTask[]) {
 
 export default function MentorDashboardPage() {
   const { data, tasks } = useApp()
+  const { t } = useLanguage()
+  const { tasksReturn } = useReturnNavigation()
   const { cohort, learners, currentUser } = data
   const kpis = getMentorDashboardKpis(cohort)
 
@@ -33,54 +36,63 @@ export default function MentorDashboardPage() {
 
   return (
     <div>
-      <h1 className="page-title">Good morning, {currentUser.name.split(' ')[0]}</h1>
+      <h1 className="page-title">{t('dashboard.greeting', { name: currentUser.name.split(' ')[0] })}</h1>
       <p className="page-subtitle">{cohort.name}</p>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
-        <StatCard label="Your learners" value={myLearners.length} />
-        <StatCard label="Cohort completion" value={kpis.completionRate} suffix="%" />
-        <StatCard label="Average score" value={kpis.averageScore} suffix="/100" />
+        <StatCard label={t('dashboard.yourLearners')} value={myLearners.length} />
+        <StatCard label={t('dashboard.cohortCompletion')} value={kpis.completionRate} suffix="%" />
+        <StatCard label={t('dashboard.averageScore')} value={kpis.averageScore} suffix="/100" />
       </div>
 
       <section className="mt-10">
-        <h2 className="section-title">Who needs you?</h2>
+        <h2 className="section-title">{t('dashboard.whoNeedsYou')}</h2>
         <p className="mt-2 max-w-2xl text-sm text-stone-600">
-          Morning preview — full lists live in <Link to="/tasks" className="text-accent hover:underline">Tasks</Link> and{' '}
-          <Link to="/learners" className="text-accent hover:underline">Learners</Link>.
+          {t('dashboard.previewPrefix')}
+          <Link to="/tasks" className="text-accent hover:underline">{t('nav.tasks')}</Link>
+          {t('dashboard.previewJoin')}
+          <Link to="/learners" className="text-accent hover:underline">{t('nav.learners')}</Link>
+          {t('dashboard.previewSuffix')}
         </p>
 
         <div className="mt-6 space-y-6">
           <ActionPanel
             kind="work"
-            title="Work queue — grade or respond"
-            subtitle="Submissions waiting for you"
+            title={t('dashboard.workQueue')}
+            subtitle={t('dashboard.workQueueDesc')}
             count={pendingWork.length}
             previewCount={workPreview.length}
             viewAllTo="/tasks"
-            viewAllLabel="Open Tasks"
-            emptyText="No tasks waiting for you."
+            viewAllLabel={t('dashboard.openTasks')}
+            emptyText={t('dashboard.noTasks')}
+            moreLinkLabel={t('dashboard.openTasksLink')}
+            t={t}
           >
             {workPreview.map((task) => (
               <WorkRow
                 key={task.id}
                 task={task}
                 learner={myLearners.find((l) => l.id === task.learnerId)}
+                tasksReturn={tasksReturn}
+                t={t}
               />
             ))}
           </ActionPanel>
 
           <ActionPanel
             kind="followup"
-            title="Follow up — check in or message"
-            subtitle="At risk or stuck — no grading task"
+            title={t('dashboard.followUp')}
+            subtitle={t('dashboard.followUpDesc')}
             count={grouped.stuck.length}
             previewCount={followUpPreview.length}
             viewAllTo="/learners?board=stuck"
-            viewAllLabel="All at risk & stuck"
-            emptyText="No learners flagged for follow-up."
+            viewAllLabel={t('dashboard.allAtRisk')}
+            emptyText={t('dashboard.noFollowUp')}
+            moreLinkLabel={t('dashboard.allAtRisk')}
+            t={t}
           >
             {followUpPreview.map((learner) => (
-              <FollowUpRow key={learner.id} learner={learner} />
+              <FollowUpRow key={learner.id} learner={learner} t={t} />
             ))}
           </ActionPanel>
         </div>
@@ -98,6 +110,8 @@ function ActionPanel({
   viewAllTo,
   viewAllLabel,
   emptyText,
+  moreLinkLabel,
+  t,
   children,
 }: {
   kind: 'work' | 'followup'
@@ -108,6 +122,8 @@ function ActionPanel({
   viewAllTo: string
   viewAllLabel: string
   emptyText: string
+  moreLinkLabel: string
+  t: (key: string, params?: Record<string, string | number>) => string
   children: ReactNode
 }) {
   const border =
@@ -141,9 +157,9 @@ function ActionPanel({
       </div>
       {overflow > 0 && (
         <p className="border-t border-stone-200/80 px-4 py-2 text-center text-xs text-stone-500">
-          +{overflow} more in{' '}
+          {t('dashboard.moreInTasks', { count: overflow })}
           <Link to={viewAllTo} className="text-accent hover:underline">
-            {viewAllLabel.toLowerCase()}
+            {moreLinkLabel.toLowerCase()}
           </Link>
         </p>
       )}
@@ -151,10 +167,20 @@ function ActionPanel({
   )
 }
 
-function WorkRow({ task, learner }: { task: MentorTask; learner?: Learner }) {
+function WorkRow({
+  task,
+  learner,
+  tasksReturn,
+  t,
+}: {
+  task: MentorTask
+  learner?: Learner
+  tasksReturn: { returnTo: string; returnLabel: string }
+  t: (key: string) => string
+}) {
   const isReview = task.type === 'REVIEW_REQUEST'
   const to = getTaskRoute(task)
-  const cta = isReview ? 'Review →' : 'Mark →'
+  const cta = isReview ? t('dashboard.review') : t('dashboard.mark')
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
@@ -173,7 +199,7 @@ function WorkRow({ task, learner }: { task: MentorTask; learner?: Learner }) {
                 : 'border-stone-400 bg-stone-100 text-stone-800'
             }`}
           >
-            {isReview ? 'Review request' : 'New submission'}
+            {isReview ? t('dashboard.reviewRequest') : t('dashboard.newSubmission')}
           </span>
         </div>
         <p className="mt-1 text-xs text-stone-600">
@@ -182,7 +208,7 @@ function WorkRow({ task, learner }: { task: MentorTask; learner?: Learner }) {
       </div>
       <Link
         to={to}
-        state={TASKS_RETURN}
+        state={tasksReturn}
         className="shrink-0 rounded border border-amber-500 bg-white px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-50"
       >
         {cta}
@@ -191,7 +217,13 @@ function WorkRow({ task, learner }: { task: MentorTask; learner?: Learner }) {
   )
 }
 
-function FollowUpRow({ learner }: { learner: Learner }) {
+function FollowUpRow({
+  learner,
+  t,
+}: {
+  learner: Learner
+  t: (key: string, params?: Record<string, string | number>) => string
+}) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
       <div className="min-w-0 flex-1">
@@ -205,15 +237,15 @@ function FollowUpRow({ learner }: { learner: Learner }) {
           <StatusBadge status={learner.status} />
         </div>
         <p className="mt-1 text-xs text-stone-600">
-          {learner.currentModule} · Risk {learner.dropOffRisk} ·{' '}
-          {formatRelativeTime(learner.lastActive)}
+          {learner.currentModule} · {t('dashboard.risk')} {learner.dropOffRisk} ·{' '}
+          {formatRelativeTime(learner.lastActive, t)}
         </p>
       </div>
       <Link
         to={`/chat/${learner.id}`}
         className="shrink-0 rounded border border-red-400 bg-white px-3 py-1.5 text-xs font-medium text-red-900 hover:bg-red-50"
       >
-        Message →
+        {t('dashboard.message')}
       </Link>
     </div>
   )

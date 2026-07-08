@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
-import { getNotificationRoute, getRecentNotifications, formatBadgeCount, getUnreadNotificationCount } from '../utils/mockDataHelpers'
+import { useLanguage } from '../context/LanguageContext'
+import {
+  getNotificationRoute,
+  getRecentNotifications,
+  formatBadgeCount,
+  getUnreadNotificationCount,
+} from '../utils/mockDataHelpers'
+import { useReturnNavigation } from '../utils/taskNavigation'
 import { getNotificationTypeStyle } from '../utils/notificationStyles'
-import { NOTIFICATIONS_RETURN } from '../utils/taskNavigation'
-import type { Notification } from '../types'
 
 function BellIcon() {
   return (
@@ -15,15 +20,10 @@ function BellIcon() {
   )
 }
 
-function formatNotificationDate(isoDate: string) {
-  return new Date(isoDate + 'T12:00:00').toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-  })
-}
-
 export default function NotificationBell() {
   const { notifications, markNotificationRead } = useApp()
+  const { t, dateLocale } = useLanguage()
+  const { notificationsReturn } = useReturnNavigation()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -50,9 +50,11 @@ export default function NotificationBell() {
     markNotificationRead(notification.id)
     setOpen(false)
     navigate(getNotificationRoute(notification, notification.type), {
-      state: NOTIFICATIONS_RETURN,
+      state: notificationsReturn,
     })
   }
+
+  const typeLabel = (type: NotificationType) => t(`notificationType.${type}`)
 
   return (
     <div ref={containerRef} className="relative">
@@ -60,8 +62,12 @@ export default function NotificationBell() {
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         className="relative rounded p-1.5 transition hover:bg-stone-100"
-        title="Notifications"
-        aria-label={unreadBadge ? `Notifications, ${unreadBadge} unread` : 'Notifications'}
+        title={t('header.notifications')}
+        aria-label={
+          unreadBadge
+            ? t('header.notificationsUnread', { count: unreadBadge })
+            : t('header.notifications')
+        }
         aria-expanded={open}
       >
         <BellIcon />
@@ -76,43 +82,49 @@ export default function NotificationBell() {
         <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-md border border-stone-300 bg-white shadow-lg">
           <div className="border-b border-stone-200 px-4 py-2.5">
             <p className="text-sm font-medium text-stone-900">
-              Notifications
+              {t('header.notifications')}
               {unreadBadge ? (
-                <span className="ml-2 font-normal text-stone-500">({unreadBadge} unread)</span>
+                <span className="ml-2 font-normal text-stone-500">
+                  ({t('inbox.unread', { count: unreadBadge })})
+                </span>
               ) : (
-                <span className="ml-2 font-normal text-stone-400">(all read)</span>
+                <span className="ml-2 font-normal text-stone-400">{t('header.allRead')}</span>
               )}
             </p>
           </div>
 
           {unreadRecent.length === 0 ? (
-            <p className="px-4 py-6 text-center text-sm text-stone-500">No unread notifications.</p>
+            <p className="px-4 py-6 text-center text-sm text-stone-500">{t('header.noUnread')}</p>
           ) : (
             <ul className="max-h-80 divide-y divide-stone-100 overflow-y-auto">
               {unreadRecent.map((n) => {
                 const typeStyle = getNotificationTypeStyle(n.type)
                 return (
-                <li key={n.id}>
-                  <button
-                    type="button"
-                    onClick={() => handleSelect(n)}
-                    className={`w-full border-l-4 px-4 py-3 text-left transition hover:brightness-95 ${typeStyle.border} ${typeStyle.rowBg}`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-stone-900">
-                        {n.learnerName}
+                  <li key={n.id}>
+                    <button
+                      type="button"
+                      onClick={() => handleSelect(n)}
+                      className={`w-full border-l-4 px-4 py-3 text-left transition hover:brightness-95 ${typeStyle.border} ${typeStyle.rowBg}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-stone-900">{n.learnerName}</p>
+                        <span
+                          className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${typeStyle.badge}`}
+                        >
+                          {typeLabel(n.type)}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 line-clamp-2 text-xs text-stone-700">{n.message}</p>
+                      <p className="mt-1 text-xs text-stone-400">
+                        {new Date(n.date + 'T12:00:00').toLocaleDateString(dateLocale, {
+                          day: 'numeric',
+                          month: 'short',
+                        })}
                       </p>
-                      <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${typeStyle.badge}`}>
-                        {typeStyle.label}
-                      </span>
-                    </div>
-                    <p className="mt-0.5 line-clamp-2 text-xs text-stone-700">
-                      {n.message}
-                    </p>
-                    <p className="mt-1 text-xs text-stone-400">{formatNotificationDate(n.date)}</p>
-                  </button>
-                </li>
-              )})}
+                    </button>
+                  </li>
+                )
+              })}
             </ul>
           )}
 
@@ -124,10 +136,11 @@ export default function NotificationBell() {
             }}
             className="w-full border-t border-stone-200 py-2.5 text-sm font-medium text-accent transition hover:bg-stone-50"
           >
-            More
+            {t('header.more')}
           </button>
         </div>
       )}
     </div>
   )
 }
+import type { Notification, NotificationType } from '../types'

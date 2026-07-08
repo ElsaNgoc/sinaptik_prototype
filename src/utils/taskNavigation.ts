@@ -1,12 +1,4 @@
-export const TASKS_RETURN = {
-  returnTo: '/tasks',
-  returnLabel: 'Back to tasks',
-} as const
-
-export const NOTIFICATIONS_RETURN = {
-  returnTo: '/notifications',
-  returnLabel: 'Back to inbox',
-} as const
+import { useLanguage } from '../context/LanguageContext'
 
 export type ReturnNavigationState = {
   returnTo?: string
@@ -22,5 +14,22 @@ export function resolveBackNavigation(
   return {
     to: nav?.returnTo ?? defaultTo,
     label: nav?.returnLabel ?? defaultLabel,
+  }
+}
+
+export function useReturnNavigation() {
+  const { t } = useLanguage()
+  return {
+    tasksReturn: {
+      returnTo: '/tasks',
+      returnLabel: t('back.tasks'),
+    },
+    notificationsReturn: {
+      returnTo: '/notifications',
+      returnLabel: t('back.inbox'),
+    },
+    backToLearners: t('back.learners'),
+    backToDashboard: t('back.dashboard'),
+    backToLearner: (name: string) => t('back.learner', { name }),
   }
 }

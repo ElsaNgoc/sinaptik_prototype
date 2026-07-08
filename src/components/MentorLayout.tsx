@@ -1,4 +1,5 @@
 import { useApp } from '../context/AppContext'
+import { useLanguage } from '../context/LanguageContext'
 import SidebarShell from './SidebarShell'
 import MentorHeader from './MentorHeader'
 import CourseSwitcher from './CourseSwitcher'
@@ -10,33 +11,36 @@ import {
 
 export default function MentorLayout() {
   const { data, notifications, tasks, selectedCourse } = useApp()
+  const { t } = useLanguage()
   const unreadNotifications = getUnreadNotificationCount(notifications)
   const pendingTasks = getPendingTaskCount(tasks)
 
   const navItems = [
-    { to: '/', label: 'Dashboard', end: true },
-    { to: '/tasks', label: 'Tasks', badge: formatBadgeCount(pendingTasks) },
-    { to: '/learners', label: 'Learners' },
+    { to: '/', label: t('nav.dashboard'), end: true },
+    { to: '/tasks', label: t('nav.tasks'), badge: formatBadgeCount(pendingTasks) },
+    { to: '/learners', label: t('nav.learners') },
     {
       to: '/notifications',
-      label: 'Inbox',
+      label: t('nav.inbox'),
       badge: formatBadgeCount(unreadNotifications),
     },
-    { to: '/programs', label: 'Course catalog' },
+    { to: '/programs', label: t('nav.courseCatalog') },
   ]
 
   return (
     <SidebarShell
       logoSrc="/sinaptik-logo.png"
       logoAlt="Sinaptik"
-      subtitle="Mentor portal"
+      subtitle={t('nav.mentorPortal')}
       belowTitle={<CourseSwitcher />}
       navItems={navItems}
       header={<MentorHeader />}
       user={{
         name: data.currentUser.name,
         avatar: data.currentUser.avatar,
-        role: `Mentor · ${selectedCourse?.cohortName ?? data.cohort.name}`,
+        role: t('nav.mentorRole', {
+          cohort: selectedCourse?.cohortName ?? data.cohort.name,
+        }),
       }}
     />
   )
