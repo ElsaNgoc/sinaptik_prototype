@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useApp } from '../context/AppContext'
 
 import { useLanguage } from '../context/LanguageContext'
+import { localizeProgramById } from '../i18n/localize'
 
 
 
@@ -42,7 +43,7 @@ export default function CourseSwitcher() {
 
   const { mentorCourses, selectedCourse, selectedCourseId, setSelectedCourseId } = useApp()
 
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
 
   const [open, setOpen] = useState(false)
 
@@ -69,17 +70,15 @@ export default function CourseSwitcher() {
 
 
   if (mentorCourses.length <= 1) {
+    const localized = selectedCourse
+      ? localizeProgramById(selectedCourse.id, selectedCourse.name, selectedCourse.cohortName, locale)
+      : null
 
     return (
-
-      <p className="mt-0.5 truncate text-xs text-stone-600" title={selectedCourse?.cohortName}>
-
-        {selectedCourse?.cohortName ?? t('nav.mentorPortal')}
-
+      <p className="mt-0.5 truncate text-xs text-stone-600" title={localized?.cohortName}>
+        {localized?.cohortName ?? t('nav.mentorPortal')}
       </p>
-
     )
-
   }
 
 
@@ -111,9 +110,14 @@ export default function CourseSwitcher() {
           </span>
 
           <span className="block truncate text-xs font-medium text-stone-900">
-
-            {selectedCourse?.name}
-
+            {selectedCourse
+              ? localizeProgramById(
+                  selectedCourse.id,
+                  selectedCourse.name,
+                  selectedCourse.cohortName,
+                  locale
+                ).name
+              : ''}
           </span>
 
         </span>
@@ -135,55 +139,32 @@ export default function CourseSwitcher() {
         >
 
           {mentorCourses.map((course) => {
-
             const active = course.id === selectedCourseId
+            const localized = localizeProgramById(course.id, course.name, course.cohortName, locale)
 
             return (
-
               <li key={course.id}>
-
                 <button
-
                   type="button"
-
                   role="option"
-
                   aria-selected={active}
-
                   onClick={() => {
-
                     setSelectedCourseId(course.id)
-
                     setOpen(false)
-
                   }}
-
                   className={`block w-full px-3 py-2 text-left transition ${
-
                     active ? 'bg-stone-100' : 'hover:bg-stone-50'
-
                   }`}
-
                 >
-
                   <span className="block truncate text-xs font-medium text-stone-900">
-
-                    {course.name}
-
+                    {localized.name}
                   </span>
-
                   <span className="block truncate text-[10px] text-stone-500">
-
-                    {course.cohortName}
-
+                    {localized.cohortName}
                   </span>
-
                 </button>
-
               </li>
-
             )
-
           })}
 
         </ul>

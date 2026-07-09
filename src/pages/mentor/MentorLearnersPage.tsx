@@ -6,6 +6,7 @@ import PageTitleWithIcon from '../../components/PageTitleWithIcon'
 import StatusBadge from '../../components/StatusBadge'
 import { getMentorLearners, formatRelativeTime } from '../../utils/dashboard'
 import { searchLearners } from '../../utils/mockDataHelpers'
+import { localizeModuleTitle } from '../../i18n/localize'
 import { useReturnNavigation } from '../../utils/taskNavigation'
 import type { Learner } from '../../types'
 
@@ -74,7 +75,7 @@ function sortLearners(learners: Learner[], group: LearnerGroup): Learner[] {
 
 export default function MentorLearnersPage() {
   const { data } = useApp()
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { learnersReturn } = useReturnNavigation()
@@ -205,7 +206,9 @@ export default function MentorLearnersPage() {
                   }
                 >
                   <td className="px-4 py-3 font-medium text-stone-900">{learner.name}</td>
-                  <td className="px-4 py-3 text-stone-600">{learner.currentModule}</td>
+                  <td className="px-4 py-3 text-stone-600">
+                    {localizeModuleTitle(learner.currentModule, locale)}
+                  </td>
                   <td className="px-4 py-3">
                     <StatusBadge status={learner.status} />
                   </td>

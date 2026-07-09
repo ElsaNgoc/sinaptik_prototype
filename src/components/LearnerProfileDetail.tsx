@@ -15,6 +15,13 @@ import {
   getActivityLabel,
   getRiskColor,
 } from '../utils/dashboard'
+import {
+  localizeCohortLabel,
+  localizeDropOffRisk,
+  localizeLearnerModules,
+  localizeModuleTitle,
+  localizeActivityLogMessage,
+} from '../i18n/localize'
 
 import type { ActivityLog, Learner, ReviewRequest, Submission } from '../types'
 
@@ -61,7 +68,7 @@ interface LearnerProfileDetailProps {
 export default function LearnerProfileDetail({ learner, logs, compact = false }: LearnerProfileDetailProps) {
   const { data, reviewRequests, getSubmissionsForLearner } = useApp()
 
-  const { t, dateLocale } = useLanguage()
+  const { t, dateLocale, locale } = useLanguage()
 
   const navigate = useNavigate()
 
@@ -79,6 +86,11 @@ export default function LearnerProfileDetail({ learner, logs, compact = false }:
   )
 
   const progressPct = Math.round((learner.moduleProgress / learner.totalModules) * 100)
+  const localizedModules = localizeLearnerModules(learner.moduleHistory, locale)
+  const localizedLearner = {
+    ...learner,
+    moduleHistory: localizedModules,
+  }
 
   return (
     <div className={compact ? 'space-y-4' : 'space-y-6'}>
@@ -90,12 +102,16 @@ export default function LearnerProfileDetail({ learner, logs, compact = false }:
         />
         <div className="min-w-0">
           <h2 className="font-serif text-xl font-semibold text-stone-900">{learner.name}</h2>
-          <p className="mt-1 text-sm text-stone-600">{learner.enrollmentLabel}</p>
-          <p className="text-sm text-stone-600">{learner.currentModule}</p>
+          <p className="mt-1 text-sm text-stone-600">
+            {localizeCohortLabel(learner.enrollmentLabel, locale)}
+          </p>
+          <p className="text-sm text-stone-600">
+            {localizeModuleTitle(learner.currentModule, locale)}
+          </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <StatusBadge status={learner.status} />
             <span className={`text-xs ${getRiskColor(learner.dropOffRisk)}`}>
-              {t('profile.dropOff', { risk: learner.dropOffRisk })}
+              {t('profile.dropOff', { risk: localizeDropOffRisk(learner.dropOffRisk, t) })}
             </span>
           </div>
         </div>
@@ -125,14 +141,14 @@ export default function LearnerProfileDetail({ learner, logs, compact = false }:
         <h3 className="text-sm font-medium text-stone-900">{t('profile.learningSnapshot')}</h3>
         <div className="mt-3">
           <LearnerInsightChart
-            learner={learner}
+            learner={localizedLearner}
             cohortAvgScore={cohortAvgScore}
             cohortAvgEngagement={cohortAvgEngagement}
           />
         </div>
       </section>
 
-      <ModuleHistoryChart learner={learner} />
+      <ModuleHistoryChart learner={localizedLearner} />
 
       {(pendingSubmissions.length > 0 || openReviewRequests.length > 0) && (
         <section className="rounded-lg border border-amber-200 bg-amber-50/50 p-4">
@@ -145,7 +161,9 @@ export default function LearnerProfileDetail({ learner, logs, compact = false }:
               >
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-stone-900">{submission.assignmentTitle}</p>
-                  <p className="mt-0.5 text-[11px] text-stone-600">{submission.moduleTitle}</p>
+                  <p className="mt-0.5 text-[11px] text-stone-600">
+                    {localizeModuleTitle(submission.moduleTitle, locale)}
+                  </p>
                   <p className="mt-1 text-xs text-stone-700">
                     {submission.aiScore}
                     <span className="text-stone-500">/100</span>
@@ -223,7 +241,9 @@ export default function LearnerProfileDetail({ learner, logs, compact = false }:
               >
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-stone-900">{submission.assignmentTitle}</p>
-                  <p className="mt-0.5 text-[11px] text-stone-600">{submission.moduleTitle}</p>
+                  <p className="mt-0.5 text-[11px] text-stone-600">
+                    {localizeModuleTitle(submission.moduleTitle, locale)}
+                  </p>
                   <p className="mt-1 text-xs text-stone-700">
                     {submission.aiScore}
                     <span className="text-stone-500">/100</span>
@@ -271,7 +291,9 @@ export default function LearnerProfileDetail({ learner, logs, compact = false }:
                     {getActivityLabel(log.type, t)}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-stone-800">{log.message}</p>
+                    <p className="text-xs text-stone-800">
+                      {localizeActivityLogMessage(log.id, log.message, locale)}
+                    </p>
                     <p className="mt-0.5 text-[10px] text-stone-400">
                       {formatTimestamp(log.timestamp, dateLocale)}
                     </p>

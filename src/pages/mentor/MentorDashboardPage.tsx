@@ -8,6 +8,7 @@ import {
   formatRelativeTime,
 } from '../../utils/dashboard'
 import { getMentorDashboardKpis, getTaskRoute } from '../../utils/mockDataHelpers'
+import { localizeCohortLabel, localizeDropOffRisk, localizeModuleTitle } from '../../i18n/localize'
 import { useReturnNavigation, type ReturnNavigationState } from '../../utils/taskNavigation'
 import StatCard from '../../components/StatCard'
 import StatusBadge from '../../components/StatusBadge'
@@ -24,7 +25,7 @@ function pendingTasksSorted(tasks: MentorTask[]) {
 
 export default function MentorDashboardPage() {
   const { data, tasks } = useApp()
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const { dashboardReturn } = useReturnNavigation()
   const { cohort, learners, currentUser } = data
   const kpis = getMentorDashboardKpis(cohort)
@@ -42,7 +43,7 @@ export default function MentorDashboardPage() {
         title={t(greetingKey, { name: currentUser.name.split(' ')[0] })}
         icon="dashboard"
       />
-      <p className="page-subtitle">{cohort.name}</p>
+      <p className="page-subtitle">{localizeCohortLabel(cohort.name, locale)}</p>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
         <StatCard label={t('dashboard.yourLearners')} value={myLearners.length} />
@@ -80,6 +81,7 @@ export default function MentorDashboardPage() {
                 learner={myLearners.find((l) => l.id === task.learnerId)}
                 returnNav={dashboardReturn}
                 t={t}
+                locale={locale}
               />
             ))}
           </ActionPanel>
@@ -97,7 +99,7 @@ export default function MentorDashboardPage() {
             t={t}
           >
             {followUpPreview.map((learner) => (
-              <FollowUpRow key={learner.id} learner={learner} t={t} />
+              <FollowUpRow key={learner.id} learner={learner} t={t} locale={locale} />
             ))}
           </ActionPanel>
         </div>
@@ -177,11 +179,13 @@ function WorkRow({
   learner,
   returnNav,
   t,
+  locale,
 }: {
   task: MentorTask
   learner?: Learner
   returnNav: ReturnNavigationState
   t: (key: string) => string
+  locale: 'en' | 'id'
 }) {
   const isReview = task.type === 'REVIEW_REQUEST'
   const to = getTaskRoute(task)
@@ -208,7 +212,7 @@ function WorkRow({
           </span>
         </div>
         <p className="mt-1 text-xs text-stone-600">
-          {task.assignmentTitle} · {task.moduleTitle}
+          {task.assignmentTitle} · {localizeModuleTitle(task.moduleTitle, locale)}
         </p>
       </div>
       <Link
@@ -225,9 +229,11 @@ function WorkRow({
 function FollowUpRow({
   learner,
   t,
+  locale,
 }: {
   learner: Learner
   t: (key: string, params?: Record<string, string | number>) => string
+  locale: 'en' | 'id'
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
@@ -242,7 +248,8 @@ function FollowUpRow({
           <StatusBadge status={learner.status} />
         </div>
         <p className="mt-1 text-xs text-stone-600">
-          {learner.currentModule} · {t('dashboard.risk')} {learner.dropOffRisk} ·{' '}
+          {localizeModuleTitle(learner.currentModule, locale)} · {t('dashboard.risk')}{' '}
+          {localizeDropOffRisk(learner.dropOffRisk, t)} ·{' '}
           {formatRelativeTime(learner.lastActive, t)}
         </p>
       </div>

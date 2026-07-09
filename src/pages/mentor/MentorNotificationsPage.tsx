@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { useLanguage } from '../../context/LanguageContext'
+import { localizeNotificationMessage } from '../../i18n/localize'
 import PageTitleWithIcon from '../../components/PageTitleWithIcon'
 import {
   filterNotificationsByTab,
@@ -70,12 +71,14 @@ function NotificationRow({
   onRead,
   t,
   dateLocale,
+  locale,
   notificationsReturn,
 }: {
   notification: Notification
   onRead: (id: string) => void
   t: (key: string, params?: Record<string, string | number>) => string
   dateLocale: string
+  locale: 'en' | 'id'
   notificationsReturn: { returnTo: string; returnLabel: string }
 }) {
   const read = notification.read
@@ -106,7 +109,7 @@ function NotificationRow({
         )}
       </div>
       <p className={`min-w-0 text-sm ${read ? 'text-stone-400' : 'text-stone-800'}`}>
-        {notification.message}
+        {localizeNotificationMessage(notification.id, notification.message, locale)}
       </p>
       <p
         className={`shrink-0 text-sm md:text-right ${
@@ -121,7 +124,7 @@ function NotificationRow({
 
 export default function MentorNotificationsPage() {
   const { notifications, markNotificationRead } = useApp()
-  const { t, dateLocale } = useLanguage()
+  const { t, dateLocale, locale } = useLanguage()
   const { notificationsReturn } = useReturnNavigation()
   const [searchParams] = useSearchParams()
   const [tab, setTab] = useState<InboxTab>('ALL')
@@ -276,6 +279,7 @@ export default function MentorNotificationsPage() {
                 onRead={markNotificationRead}
                 t={t}
                 dateLocale={dateLocale}
+                locale={locale}
                 notificationsReturn={notificationsReturn}
               />
             ))}

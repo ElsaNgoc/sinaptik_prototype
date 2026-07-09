@@ -1,3 +1,4 @@
+import { useLanguage } from '../../context/LanguageContext'
 import type { Learner } from '../../types'
 
 const ACCENT = '#1e3a5f'
@@ -15,6 +16,7 @@ export default function LearnerInsightChart({
   cohortAvgScore,
   cohortAvgEngagement,
 }: LearnerInsightChartProps) {
+  const { t } = useLanguage()
   const w = 520
   const h = 180
   const pad = { top: 16, right: 20, bottom: 32, left: 40 }
@@ -35,9 +37,9 @@ export default function LearnerInsightChart({
   return (
     <div>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <p className="text-xs text-stone-600">Engagement vs performance</p>
+        <p className="text-xs text-stone-600">{t('charts.engagementVsPerformance')}</p>
         <div className="text-right">
-          <p className="text-xs text-stone-500">Module progress</p>
+          <p className="text-xs text-stone-500">{t('charts.moduleProgress')}</p>
           <div className="mt-1 flex gap-1">
             {Array.from({ length: totalModules }, (_, i) => {
               const done = i < completedModules
@@ -45,7 +47,13 @@ export default function LearnerInsightChart({
               return (
                 <span
                   key={i}
-                  title={`Module ${i + 1}${done ? ' — completed' : current ? ' — current' : ''}`}
+                  title={
+                    done
+                      ? t('charts.moduleComplete', { n: i + 1 })
+                      : current
+                        ? t('charts.moduleCurrent', { n: i + 1 })
+                        : undefined
+                  }
                   className={`h-2 w-5 rounded-sm ${
                     done ? 'bg-accent' : current ? 'border border-accent bg-accent/20' : 'bg-stone-300'
                   }`}
@@ -54,7 +62,7 @@ export default function LearnerInsightChart({
             })}
           </div>
           <p className="mt-1 text-xs text-stone-500">
-            {completedModules}/{totalModules} complete
+            {t('charts.modulesComplete', { done: completedModules, total: totalModules })}
           </p>
         </div>
       </div>
@@ -65,7 +73,7 @@ export default function LearnerInsightChart({
         style={{ minHeight: '180px', maxHeight: '240px' }}
         preserveAspectRatio="xMidYMid meet"
         role="img"
-        aria-label="Engagement vs performance chart"
+        aria-label={t('charts.chartAria')}
       >
         {[25, 50, 75].map((tick) => (
           <g key={tick}>
@@ -112,7 +120,7 @@ export default function LearnerInsightChart({
         <circle cx={learnerX} cy={learnerY} r={10} fill={ACCENT} fillOpacity={0.15} />
 
         <text x={pad.left + plotW / 2} y={h - 6} textAnchor="middle" className="fill-stone-500 text-[10px]">
-          Engagement
+          {t('charts.engagement')}
         </text>
         <text
           x={12}
@@ -121,7 +129,7 @@ export default function LearnerInsightChart({
           transform={`rotate(-90, 12, ${pad.top + plotH / 2})`}
           className="fill-stone-500 text-[10px]"
         >
-          Score
+          {t('charts.score')}
         </text>
       </svg>
 
@@ -132,7 +140,7 @@ export default function LearnerInsightChart({
         </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-2 w-2 rounded-full border border-stone-400 bg-white" />
-          Cohort avg
+          {t('charts.cohortAvg')}
         </span>
       </div>
     </div>

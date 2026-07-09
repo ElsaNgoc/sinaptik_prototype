@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
+import { useLanguage } from '../../context/LanguageContext'
 import { formatBadgeCount, getUnreadChatCount } from '../../utils/mockDataHelpers'
 import { SidebarProvider, useSidebar } from '../../context/SidebarContext'
 import LanguageSwitcher from '../LanguageSwitcher'
@@ -124,6 +125,7 @@ function SidebarShellInner({
 }: SidebarShellProps) {
   const { isOpen, close } = useSidebar()
   const { conversations } = useApp()
+  const { t } = useLanguage()
   const chatBadge = formatBadgeCount(getUnreadChatCount(conversations))
 
   return (
@@ -204,7 +206,7 @@ function SidebarShellInner({
             <div className="flex items-center gap-2">
               <Link
                 to="/chat"
-                aria-label="Open chat"
+                aria-label={t('header.openChat')}
                 className="relative rounded p-1.5 text-stone-700 transition hover:bg-stone-100"
               >
                 <ChatIcon />

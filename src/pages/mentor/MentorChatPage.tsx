@@ -5,6 +5,7 @@ import { useLanguage } from '../../context/LanguageContext'
 import BackButton from '../../components/layout/BackButton'
 import LearnerProfileDetail from '../../components/LearnerProfileDetail'
 import { buildChatLearnerList, formatBadgeCount } from '../../utils/mockDataHelpers'
+import { localizeChatConversation, localizeCohortLabel } from '../../i18n/localize'
 import { resolveBackNavigation, useReturnNavigation } from '../../utils/taskNavigation'
 
 import NotificationBell from '../../components/NotificationBell'
@@ -25,7 +26,7 @@ function ChatHeaderIcons() {
 
 export default function MentorChatPage() {
   const { data, conversations, markConversationRead } = useApp()
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const { backToDashboard } = useReturnNavigation()
   const { learnerId: paramLearnerId } = useParams<{ learnerId?: string }>()
   const location = useLocation()
@@ -35,22 +36,28 @@ export default function MentorChatPage() {
     [data.learners, data.currentUser.id]
   )
 
+  const localizedConversations = useMemo(
+    () => conversations.map((c) => localizeChatConversation(c, locale)),
+    [conversations, locale]
+  )
+
   const learnerList = useMemo(
-    () => buildChatLearnerList(conversations, myLearners),
-    [conversations, myLearners]
+    () => buildChatLearnerList(localizedConversations, myLearners, locale),
+    [localizedConversations, myLearners, locale]
   )
 
   const activeId = paramLearnerId
   const activeConversation = activeId
-    ? conversations.find((c) => c.learnerId === activeId)
+    ? localizedConversations.find((c) => c.learnerId === activeId)
     : undefined
   const activeLearner = activeId ? data.learners.find((l) => l.id === activeId) : undefined
 
   const [draft, setDraft] = useState('')
   const [profileOpen, setProfileOpen] = useState(false)
 
-  const headerLabel =
-    activeConversation?.courseLabel ?? activeLearner?.enrollmentLabel ?? t('chat.learnerChat')
+  const headerLabel = activeConversation?.courseLabel
+    ?? (activeLearner ? localizeCohortLabel(activeLearner.enrollmentLabel, locale) : undefined)
+    ?? t('chat.learnerChat')
 
   const back = resolveBackNavigation(location.state, '/', backToDashboard)
   const listBack = { to: '/chat', label: t('chat.title') }

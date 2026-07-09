@@ -1,3 +1,4 @@
+import { useLanguage } from '../../context/LanguageContext'
 import type { Learner } from '../../types'
 
 interface ModuleHistoryChartProps {
@@ -5,17 +6,21 @@ interface ModuleHistoryChartProps {
 }
 
 export default function ModuleHistoryChart({ learner }: ModuleHistoryChartProps) {
+  const { t } = useLanguage()
   const visited = learner.moduleHistory.filter((m) => m.status !== 'LOCKED')
 
   return (
     <section className="rounded-lg border border-stone-300 bg-white p-4">
-      <h3 className="text-sm font-medium text-stone-900">Modules visited</h3>
+      <h3 className="text-sm font-medium text-stone-900">{t('charts.modulesVisited')}</h3>
       <p className="mt-1 text-xs text-stone-500">
-        {visited.length} of {learner.moduleHistory.length} modules started
+        {t('charts.modulesStarted', {
+          visited: visited.length,
+          total: learner.moduleHistory.length,
+        })}
       </p>
 
       {visited.length === 0 ? (
-        <p className="mt-3 text-xs text-stone-400">No modules visited yet.</p>
+        <p className="mt-3 text-xs text-stone-400">{t('charts.noModulesVisited')}</p>
       ) : (
         <div className="mt-3 space-y-2.5">
           {visited.map((mod) => {
@@ -51,11 +56,11 @@ export default function ModuleHistoryChart({ learner }: ModuleHistoryChartProps)
       <div className="mt-3 flex flex-wrap gap-4 text-[11px] text-stone-600">
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-2 w-2 rounded-sm bg-accent" />
-          Completed (score)
+          {t('charts.completedScore')}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-2 w-2 rounded-sm bg-stone-400/50" />
-          In progress
+          {t('charts.inProgress')}
         </span>
       </div>
     </section>

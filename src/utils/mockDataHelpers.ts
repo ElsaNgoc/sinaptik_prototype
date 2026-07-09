@@ -6,6 +6,8 @@ import type {
   NotificationType,
   Submission,
 } from '../types'
+import { localizeCohortLabel } from '../i18n/localize'
+import type { Locale } from '../i18n/translations'
 
 /** Use cohort KPIs from mock (Figma: 52.4%, 45/100) — not derived from partial submissions. */
 export function getMentorDashboardKpis(cohort: { completionRate: number; avgScore: number }) {
@@ -210,7 +212,8 @@ export function searchLearners(learners: Learner[], query: string): Learner[] {
 
 export function buildChatLearnerList(
   conversations: ChatConversation[],
-  learners: Learner[]
+  learners: Learner[],
+  locale: Locale = 'en'
 ): {
   learnerId: string
   name: string
@@ -232,7 +235,7 @@ export function buildChatLearnerList(
     .map((l) => ({
       learnerId: l.id,
       name: l.name,
-      courseLabel: l.enrollmentLabel,
+      courseLabel: localizeCohortLabel(l.enrollmentLabel, locale),
       lastMessage: '',
       unreadCount: 0,
     }))

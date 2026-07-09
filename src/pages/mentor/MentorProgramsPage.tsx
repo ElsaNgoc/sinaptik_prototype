@@ -1,6 +1,7 @@
 import { useApp } from '../../context/AppContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { fields, getMentorById, type Program } from '../../data/sinaptikCatalog'
+import { localizeCohortLabel, localizeField, localizeMentorTitle, localizeProgram } from '../../i18n/localize'
 import PageTitleWithIcon from '../../components/PageTitleWithIcon'
 
 function ProgramCard({
@@ -12,7 +13,8 @@ function ProgramCard({
   isActive: boolean
   activeCohortLabel?: string
 }) {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
+  const localized = localizeProgram(prog, locale)
   const mentor = getMentorById(prog.mentorId)
 
   return (
@@ -20,12 +22,12 @@ function ProgramCard({
       <div className="border-b border-stone-200 bg-stone-50/80 px-5 py-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h3 className="font-serif text-lg font-semibold text-stone-900">{prog.name}</h3>
-            <p className="mt-1 text-sm text-stone-600">{prog.description}</p>
+            <h3 className="font-serif text-lg font-semibold text-stone-900">{localized.name}</h3>
+            <p className="mt-1 text-sm text-stone-600">{localized.description}</p>
           </div>
           {isActive && activeCohortLabel && (
             <span className="shrink-0 rounded-full border border-accent bg-white px-3 py-1 text-xs font-medium text-accent">
-              {t('programs.active', { cohort: activeCohortLabel })}
+              {t('programs.active', { cohort: localizeCohortLabel(activeCohortLabel, locale) })}
             </span>
           )}
         </div>
@@ -34,7 +36,7 @@ function ProgramCard({
           <p className="text-xs text-stone-500">
             {t('programs.weeksModules', {
               weeks: prog.durationWeeks,
-              count: prog.modules.length,
+              count: localized.modules.length,
             })}
           </p>
           {mentor && (
@@ -49,7 +51,9 @@ function ProgramCard({
                   {t('programs.mentor')}
                 </p>
                 <p className="truncate text-sm font-medium text-stone-900">{mentor.name}</p>
-                <p className="truncate text-xs text-stone-500">{mentor.title}</p>
+                <p className="truncate text-xs text-stone-500">
+                  {mentor ? localizeMentorTitle(mentor, locale) : ''}
+                </p>
               </div>
             </div>
           )}
@@ -61,7 +65,7 @@ function ProgramCard({
           {t('programs.modules')}
         </p>
         <ol className="mt-2 space-y-1.5">
-          {prog.modules.map((m, i) => (
+          {localized.modules.map((m, i) => (
             <li key={m.id} className="flex gap-2 text-sm text-stone-700">
               <span className="w-5 shrink-0 tabular-nums text-stone-400">{i + 1}.</span>
               <span>{m.title}</span>
@@ -75,7 +79,7 @@ function ProgramCard({
 
 export default function MentorProgramsPage() {
   const { programs, data } = useApp()
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
 
   return (
     <div>
@@ -88,11 +92,12 @@ export default function MentorProgramsPage() {
         {fields.map((field) => {
           const fieldPrograms = programs.filter((p) => p.fieldId === field.id)
           if (fieldPrograms.length === 0) return null
+          const localizedField = localizeField(field, locale)
 
           return (
             <section key={field.id}>
-              <h2 className="section-title">{field.name}</h2>
-              <p className="mt-1 text-sm text-stone-600">{field.description}</p>
+              <h2 className="section-title">{localizedField.name}</h2>
+              <p className="mt-1 text-sm text-stone-600">{localizedField.description}</p>
 
               <div className="mt-4 grid gap-4 lg:grid-cols-2">
                 {fieldPrograms.map((prog) => {

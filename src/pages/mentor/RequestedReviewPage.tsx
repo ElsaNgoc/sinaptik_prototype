@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useMemo } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { useLanguage } from '../../context/LanguageContext'
+import { localizeModuleTitle } from '../../i18n/localize'
 import BackButton from '../../components/layout/BackButton'
 import { resolveBackNavigation, useReturnNavigation } from '../../utils/taskNavigation'
 import CommentBox, {
@@ -15,7 +16,7 @@ import PageTitleWithIcon from '../../components/PageTitleWithIcon'
 export default function RequestedReviewPage() {
   const { requestId } = useParams<{ requestId: string }>()
   const { data, reviewRequests, getSubmissionById, resolveReviewRequest } = useApp()
-  const { t, dateLocale } = useLanguage()
+  const { t, dateLocale, locale } = useLanguage()
   const { tasksReturn, backToLearner } = useReturnNavigation()
   const navigate = useNavigate()
   const location = useLocation()
@@ -133,7 +134,7 @@ export default function RequestedReviewPage() {
 
       <PageTitleWithIcon title={t('review.title')} icon="review" className="mt-4" />
       <p className="page-subtitle">
-        {submission.assignmentTitle} · {submission.moduleTitle} · {learner.name}
+        {submission.assignmentTitle} · {localizeModuleTitle(submission.moduleTitle, locale)} · {learner.name}
       </p>
       <p className="mt-1 text-sm text-stone-600">{t('review.subtitle')}</p>
 

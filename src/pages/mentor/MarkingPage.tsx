@@ -2,6 +2,7 @@ import { useMemo, useState, useRef, useCallback, type ReactNode } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { useLanguage } from '../../context/LanguageContext'
+import { localizeModuleTitle } from '../../i18n/localize'
 import BackButton from '../../components/layout/BackButton'
 import { resolveBackNavigation, useReturnNavigation } from '../../utils/taskNavigation'
 import CommentBox, {
@@ -331,7 +332,7 @@ export default function MarkingPage() {
   const { submissionId } = useParams<{ submissionId: string }>()
   const { data, getSubmissionById, resolveSubmission, completeTaskBySubmission, saveSubmissionMentorGrading } =
     useApp()
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const { tasksReturn, backToLearner } = useReturnNavigation()
   const navigate = useNavigate()
   const location = useLocation()
@@ -493,7 +494,7 @@ export default function MarkingPage() {
 
       <PageTitleWithIcon title={t('marking.title')} icon="marking" className="mt-4" />
       <p className="page-subtitle">
-        {submission.assignmentTitle} · {submission.moduleTitle}
+        {submission.assignmentTitle} · {localizeModuleTitle(submission.moduleTitle, locale)}
       </p>
       <p className="mt-1 text-sm text-stone-600">{learner.name}</p>
 

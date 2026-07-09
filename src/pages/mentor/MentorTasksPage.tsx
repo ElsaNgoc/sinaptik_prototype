@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { useLanguage } from '../../context/LanguageContext'
+import { localizeModuleTitle } from '../../i18n/localize'
 import CollapsibleSection from '../../components/CollapsibleSection'
 import PageTitleWithIcon from '../../components/PageTitleWithIcon'
 import {
@@ -40,12 +41,13 @@ function buildMonthGrid(year: number, month: number) {
 function taskLabel(
   task: MentorTask,
   todayIso: string,
-  t: (key: string, params?: Record<string, string | number>) => string
+  t: (key: string, params?: Record<string, string | number>) => string,
+  locale: 'en' | 'id'
 ) {
   const params = {
     name: task.learnerName,
     assignment: task.assignmentTitle,
-    module: task.moduleTitle,
+    module: localizeModuleTitle(task.moduleTitle, locale),
   }
 
   if (task.type === 'REVIEW_REQUEST') {
@@ -75,7 +77,7 @@ function dateParts(iso: string) {
 
 export default function MentorTasksPage() {
   const { tasks } = useApp()
-  const { t, dateLocale } = useLanguage()
+  const { t, dateLocale, locale } = useLanguage()
   const [searchParams, setSearchParams] = useSearchParams()
   const selectedDate = parseDateParam(searchParams.get('date'))
   const initialParts = dateParts(selectedDate)
@@ -232,7 +234,7 @@ export default function MentorTasksPage() {
                     return (
                       <CollapsibleSection
                         key={course.courseId}
-                        title={course.courseName}
+                        title={localizeModuleTitle(course.courseName, locale)}
                         count={courseTaskCount}
                         defaultOpen={courseIdx === 0}
                         level="course"
@@ -241,7 +243,7 @@ export default function MentorTasksPage() {
                           {course.modules.map((mod, modIdx) => (
                             <CollapsibleSection
                               key={mod.moduleTitle}
-                              title={mod.moduleTitle}
+                              title={localizeModuleTitle(mod.moduleTitle, locale)}
                               count={mod.tasks.length}
                               defaultOpen={courseIdx === 0 && modIdx === 0}
                               level="module"
@@ -290,7 +292,7 @@ export default function MentorTasksPage() {
 
 function TaskRow({ task, selectedDate }: { task: MentorTask; selectedDate: string }) {
   const { toggleTaskStatus } = useApp()
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const { tasksReturnForDate } = useReturnNavigation()
   const done = task.status === 'COMPLETED'
   const isReminder =
@@ -311,7 +313,7 @@ function TaskRow({ task, selectedDate }: { task: MentorTask; selectedDate: strin
         {done ? '✕' : ''}
       </button>
       <span className={`min-w-0 flex-1 ${done ? 'text-stone-500 line-through' : 'text-stone-800'}`}>
-        {taskLabel(task, TODAY_ISO, t)}
+        {taskLabel(task, TODAY_ISO, t, locale)}
       </span>
       {!isReminder && (
         <Link
