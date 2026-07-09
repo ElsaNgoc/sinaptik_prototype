@@ -4,6 +4,7 @@ import {
   generateLearners,
   computeStatusBreakdown,
   buildActivityLogs,
+  ensurePendingSubmissions,
 } from '../data/generateLearners'
 import { mentors, programs, fields, skillTests } from '../data/sinaptikCatalog'
 import type {
@@ -66,6 +67,7 @@ interface AppContextValue {
   saveTestResult: (testId: string, score: number) => void
   getSubmission: (learnerId: string, submissionId?: string) => AppData['submissions'][0] | undefined
   getSubmissionById: (submissionId: string) => AppData['submissions'][0] | undefined
+  getSubmissionsForLearner: (learnerId: string) => Submission[]
   updateLearnerStatus: (learnerId: string, status: LearnerStatus) => void
   submitMentorRequest: (reason: string) => void
   acceptFeedback: () => void
@@ -76,11 +78,15 @@ interface AppContextValue {
 const AppContext = createContext<AppContextValue | null>(null)
 
 const initialLearners = generateLearners(rawData.cohort.totalLearners)
+const initialSubmissions = ensurePendingSubmissions(
+  initialLearners,
+  rawData.submissions as Submission[]
+)
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [learners, setLearners] = useState<Learner[]>(initialLearners)
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>(() =>
-    buildActivityLogs(initialLearners, rawData.activityLogs as ActivityLog[])
+    buildActivityLogs(initialLearners, rawData.activityLogs as ActivityLog[], initialSubmissions)
   )
   const [learnerPendingReview, setLearnerPendingReview] = useState(false)
   const [learnerCompleted, setLearnerCompleted] = useState(false)
@@ -90,9 +96,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     rawData.notifications as Notification[]
   )
   const [tasks, setTasks] = useState<MentorTask[]>(rawData.tasks as MentorTask[])
-  const [submissions, setSubmissions] = useState<Submission[]>(
-    rawData.submissions as Submission[]
-  )
+  const [submissions, setSubmissions] = useState<Submission[]>(initialSubmissions)
   const [reviewRequests, setReviewRequests] = useState<ReviewRequest[]>(
     rawData.reviewRequests as ReviewRequest[]
   )
@@ -199,12 +203,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [submissions]
   )
 
+  const getSubmissionsForLearner = useCallback(
+    (learnerId: string) =>
+      submissions
+        .filter((s) => s.learnerId === learnerId)
+        .sort(
+          (a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+        ),
+    [submissions]
+  )
+
   const getSubmission = useCallback(
     (learnerId: string, submissionId?: string) => {
       if (submissionId) return getSubmissionById(submissionId)
-      return submissions.find((s) => s.learnerId === learnerId)
+      const learnerSubs = getSubmissionsForLearner(learnerId)
+      return learnerSubs.find((s) => !s.mentorMarkedAt) ?? learnerSubs[0]
     },
-    [submissions, getSubmissionById]
+    [getSubmissionById, getSubmissionsForLearner]
   )
 
   const updateLearnerStatus = useCallback((learnerId: string, status: LearnerStatus) => {
@@ -314,6 +329,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         saveSubmissionMentorGrading,
         getSubmission,
         getSubmissionById,
+        getSubmissionsForLearner,
         updateLearnerStatus,
         submitMentorRequest,
         acceptFeedback,

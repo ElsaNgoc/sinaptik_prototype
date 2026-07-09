@@ -132,6 +132,8 @@ export interface ActivityLog {
   message: string
   timestamp: string
   requiresAction: boolean
+  submissionId?: string
+  reviewRequestId?: string
 }
 
 export interface Submission {

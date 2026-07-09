@@ -1,4 +1,4 @@
-import type { ActivityLog, DropOffRisk, Learner, LearnerModule, LearnerStatus } from '../types'
+import type { ActivityLog, DropOffRisk, Learner, LearnerModule, LearnerStatus, Submission } from '../types'
 import { bootcampModules, mentors } from './sinaptikCatalog'
 
 const COHORT_LABEL = 'Data Analytics Bootcamp — Batch 7 (2026)'
@@ -561,14 +561,57 @@ function buildLearnerActivity(learner: Learner): ActivityLog[] {
  * every learner has at least some activity. Curated logs win — we only
  * synthesize for learners that have none.
  */
+/**
+ * PENDING_MENTOR learners need a submission record when activity logs say they submitted.
+ * Curated submissions from mock_data.json are kept; missing ones are synthesized.
+ */
+export function ensurePendingSubmissions(
+  learners: Learner[],
+  submissions: Submission[]
+): Submission[] {
+  const result = [...submissions]
+  const learnersWithSubmissions = new Set(submissions.map((s) => s.learnerId))
+
+  for (const learner of learners) {
+    if (learner.status !== 'PENDING_MENTOR') continue
+    if (learnersWithSubmissions.has(learner.id)) continue
+
+    result.push({
+      id: `sub-synth-${learner.id}`,
+      learnerId: learner.id,
+      courseId: learner.programId ?? BOOTCAMP_ID,
+      moduleTitle: learner.currentModule,
+      assignmentTitle: 'Assignment awaiting review',
+      content: '# Submission pending mentor review\n\nAwaiting your feedback.',
+      aiScore: learner.avgScore,
+      aiFeedback: 'Awaiting mentor review.',
+      submittedAt: learner.lastActive,
+    })
+    learnersWithSubmissions.add(learner.id)
+  }
+
+  return result
+}
+
 export function buildActivityLogs(
   learners: Learner[],
-  curatedLogs: ActivityLog[]
+  curatedLogs: ActivityLog[],
+  submissions: Submission[] = []
 ): ActivityLog[] {
   const learnersWithLogs = new Set(curatedLogs.map((l) => l.learnerId))
   const generated = learners
     .filter((l) => !learnersWithLogs.has(l.id))
-    .flatMap(buildLearnerActivity)
+    .flatMap((learner) => {
+      const logs = buildLearnerActivity(learner)
+      if (learner.status !== 'PENDING_MENTOR') return logs
+
+      const submission = submissions.find((s) => s.learnerId === learner.id)
+      if (!submission) return logs
+
+      return logs.map((log) =>
+        log.type === 'SUBMISSION' ? { ...log, submissionId: submission.id } : log
+      )
+    })
   return [...curatedLogs, ...generated]
 }
 
