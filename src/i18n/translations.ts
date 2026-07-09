@@ -10,7 +10,7 @@ const en = {
     dashboard: 'Dashboard',
     tasks: 'Tasks',
     learners: 'Learners',
-    inbox: 'Inbox',
+    inbox: 'Notification',
     courseCatalog: 'Course catalog',
     mentorPortal: 'Mentor portal',
     mentorRole: 'Mentor · {cohort}',
@@ -37,7 +37,7 @@ const en = {
   },
   back: {
     tasks: 'Back to tasks',
-    inbox: 'Back to inbox',
+    inbox: 'Back to notifications',
     learners: 'Back to learners',
     dashboard: 'Back to dashboard',
     learner: 'Back to {name}',
@@ -133,7 +133,7 @@ const en = {
     page: '{current} / {total}',
   },
   inbox: {
-    title: 'Inbox',
+    title: 'Notification',
     unread: '{count} unread',
     requireAttention: ' · {count} items require attention',
     requireAttentionOne: ' · {count} item requires attention',
@@ -278,7 +278,7 @@ const id = {
     dashboard: 'Dasbor',
     tasks: 'Tugas',
     learners: 'Peserta',
-    inbox: 'Kotak masuk',
+    inbox: 'Notifikasi',
     courseCatalog: 'Katalog kursus',
     mentorPortal: 'Portal mentor',
     mentorRole: 'Mentor · {cohort}',
@@ -305,7 +305,7 @@ const id = {
   },
   back: {
     tasks: 'Kembali ke tugas',
-    inbox: 'Kembali ke kotak masuk',
+    inbox: 'Kembali ke notifikasi',
     learners: 'Kembali ke peserta',
     dashboard: 'Kembali ke dasbor',
     learner: 'Kembali ke {name}',
@@ -401,7 +401,7 @@ const id = {
     page: '{current} / {total}',
   },
   inbox: {
-    title: 'Kotak masuk',
+    title: 'Notifikasi',
     unread: '{count} belum dibaca',
     requireAttention: ' · {count} item perlu perhatian',
     requireAttentionOne: ' · {count} item perlu perhatian',

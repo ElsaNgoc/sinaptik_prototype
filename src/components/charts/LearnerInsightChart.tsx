@@ -69,8 +69,9 @@ export default function LearnerInsightChart({
 
       <svg
         viewBox={`0 0 ${w} ${h}`}
-        className="mt-3 h-auto w-full"
-        style={{ minHeight: '180px', maxHeight: '240px' }}
+        width="100%"
+        height={h}
+        className="mt-3 block max-h-[240px]"
         preserveAspectRatio="xMidYMid meet"
         role="img"
         aria-label={t('charts.chartAria')}

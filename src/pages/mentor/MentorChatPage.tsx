@@ -161,63 +161,91 @@ export default function MentorChatPage() {
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             {activeConversation && activeLearner ? (
               <>
-                <button
-                  type="button"
-                  onClick={() => setProfileOpen((open) => !open)}
-                  className={`flex w-full shrink-0 items-center gap-3 border-b border-stone-200 px-6 py-4 text-left transition hover:bg-stone-50 ${
-                    profileOpen ? 'bg-stone-50' : ''
-                  }`}
+                <div
+                  className={`flex min-h-0 flex-1 flex-col ${profileOpen ? 'hidden lg:flex' : 'flex'}`}
                 >
-                  <img
-                    src={activeLearner.avatar}
-                    alt=""
-                    className="h-10 w-10 rounded-full border border-stone-300"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-stone-900">{activeConversation.learnerName}</p>
-                    <p className="text-xs text-stone-500">{headerLabel}</p>
-                  </div>
-                  <span className="shrink-0 text-xs text-accent">
-                    {profileOpen ? t('chat.hideProfile') : t('chat.viewProfile')}
-                  </span>
-                </button>
-
-                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-6">
-                  {activeConversation.messages.map((msg) => {
-                    const isMentor = msg.senderRole === 'MENTOR'
-                    return (
-                      <div
-                        key={msg.id}
-                        className={`flex ${isMentor ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div
-                          className={`max-w-lg rounded-lg px-4 py-2.5 text-sm leading-relaxed ${
-                            isMentor
-                              ? 'bg-stone-200 text-stone-900'
-                              : 'border border-stone-300 bg-white text-stone-800'
-                          }`}
-                        >
-                          {msg.text}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-
-                <div className="shrink-0 border-t border-stone-300 bg-paper p-4">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={draft}
-                      onChange={(e) => setDraft(e.target.value)}
-                      placeholder={t('chat.placeholder')}
-                      className="flex-1 rounded-md border border-stone-300 bg-white px-3 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                  <button
+                    type="button"
+                    onClick={() => setProfileOpen((open) => !open)}
+                    className={`flex w-full shrink-0 items-center gap-3 border-b border-stone-200 px-6 py-4 text-left transition hover:bg-stone-50 ${
+                      profileOpen ? 'bg-stone-50' : ''
+                    }`}
+                  >
+                    <img
+                      src={activeLearner.avatar}
+                      alt=""
+                      className="h-10 w-10 rounded-full border border-stone-300"
                     />
-                    <button type="button" className="btn-primary px-4" aria-label={t('chat.sendAria')}>
-                      {t('chat.send')}
-                    </button>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-stone-900">{activeConversation.learnerName}</p>
+                      <p className="text-xs text-stone-500">{headerLabel}</p>
+                    </div>
+                    <span className="shrink-0 text-xs text-accent lg:hidden">
+                      {t('chat.viewProfile')}
+                    </span>
+                    <span className="hidden shrink-0 text-xs text-accent lg:inline">
+                      {profileOpen ? t('chat.hideProfile') : t('chat.viewProfile')}
+                    </span>
+                  </button>
+
+                  <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-6">
+                    {activeConversation.messages.map((msg) => {
+                      const isMentor = msg.senderRole === 'MENTOR'
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`flex ${isMentor ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div
+                            className={`max-w-lg rounded-lg px-4 py-2.5 text-sm leading-relaxed ${
+                              isMentor
+                                ? 'bg-stone-200 text-stone-900'
+                                : 'border border-stone-300 bg-white text-stone-800'
+                            }`}
+                          >
+                            {msg.text}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  <div className="shrink-0 border-t border-stone-300 bg-paper p-4">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={draft}
+                        onChange={(e) => setDraft(e.target.value)}
+                        placeholder={t('chat.placeholder')}
+                        className="flex-1 rounded-md border border-stone-300 bg-white px-3 py-2.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                      />
+                      <button type="button" className="btn-primary px-4" aria-label={t('chat.sendAria')}>
+                        {t('chat.send')}
+                      </button>
+                    </div>
                   </div>
                 </div>
+
+                {profileOpen && (
+                  <div className="flex min-h-0 flex-1 flex-col lg:hidden">
+                    <div className="flex shrink-0 items-center gap-3 border-b border-stone-200 px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={() => setProfileOpen(false)}
+                        className="text-sm font-medium text-accent hover:underline"
+                      >
+                        ← {t('chat.learnerChat')}
+                      </button>
+                    </div>
+                    <div className="min-h-0 flex-1 overflow-y-auto p-4">
+                      <LearnerProfileDetail
+                        learner={activeLearner}
+                        logs={activityLogs}
+                        compact
+                      />
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
               <div className="flex flex-1 items-center justify-center text-sm text-stone-500">
