@@ -36,6 +36,10 @@ export function useReturnNavigation() {
   return {
     tasksReturn: buildTasksReturn(t('back.tasks')),
     tasksReturnForDate: (date: string) => buildTasksReturn(t('back.tasks'), date),
+    dashboardReturn: {
+      returnTo: '/',
+      returnLabel: t('back.dashboard'),
+    },
     notificationsReturn: {
       returnTo: '/notifications',
       returnLabel: t('back.inbox'),

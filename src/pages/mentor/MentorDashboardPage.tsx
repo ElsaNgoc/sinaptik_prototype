@@ -25,7 +25,7 @@ function pendingTasksSorted(tasks: MentorTask[]) {
 export default function MentorDashboardPage() {
   const { data, tasks } = useApp()
   const { t } = useLanguage()
-  const { tasksReturn } = useReturnNavigation()
+  const { dashboardReturn } = useReturnNavigation()
   const { cohort, learners, currentUser } = data
   const kpis = getMentorDashboardKpis(cohort)
 
@@ -78,7 +78,7 @@ export default function MentorDashboardPage() {
                 key={task.id}
                 task={task}
                 learner={myLearners.find((l) => l.id === task.learnerId)}
-                tasksReturn={tasksReturn}
+                returnNav={dashboardReturn}
                 t={t}
               />
             ))}
@@ -175,12 +175,12 @@ function ActionPanel({
 function WorkRow({
   task,
   learner,
-  tasksReturn,
+  returnNav,
   t,
 }: {
   task: MentorTask
   learner?: Learner
-  tasksReturn: ReturnNavigationState
+  returnNav: ReturnNavigationState
   t: (key: string) => string
 }) {
   const isReview = task.type === 'REVIEW_REQUEST'
@@ -213,7 +213,7 @@ function WorkRow({
       </div>
       <Link
         to={to}
-        state={tasksReturn}
+        state={returnNav}
         className="shrink-0 rounded border border-amber-500 bg-white px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-50"
       >
         {cta}
