@@ -1,83 +1,60 @@
 import type { Learner } from '../../types'
 
-const ACCENT = '#1e3a5f'
-const MUTED = '#9ca3af'
-const TRACK = '#e7e5e4'
-
 interface ModuleHistoryChartProps {
   learner: Learner
 }
 
 export default function ModuleHistoryChart({ learner }: ModuleHistoryChartProps) {
   const visited = learner.moduleHistory.filter((m) => m.status !== 'LOCKED')
-  const barH = 18
-  const rowGap = 14
-  const chartW = 400
 
   return (
-    <section className="card border-stone-300 p-6">
-      <div className="section-heading">
-        <h2 className="section-title">Modules visited</h2>
-        <p className="mt-1 text-xs text-stone-500">
-          {visited.length} of {learner.moduleHistory.length} modules started
-        </p>
-      </div>
+    <section className="rounded-lg border border-stone-300 bg-white p-4">
+      <h3 className="text-sm font-medium text-stone-900">Modules visited</h3>
+      <p className="mt-1 text-xs text-stone-500">
+        {visited.length} of {learner.moduleHistory.length} modules started
+      </p>
 
       {visited.length === 0 ? (
-        <p className="mt-6 text-sm text-stone-400">No modules visited yet.</p>
+        <p className="mt-3 text-xs text-stone-400">No modules visited yet.</p>
       ) : (
-        <svg
-          viewBox={`0 0 ${chartW} ${visited.length * (barH + rowGap) + 8}`}
-          className="mt-4 w-full"
-          role="img"
-          aria-label="Modules visited with progress and score"
-        >
-          {visited.map((mod, i) => {
-            const y = i * (barH + rowGap)
+        <div className="mt-3 space-y-2.5">
+          {visited.map((mod) => {
             const inProgress = mod.status === 'IN_PROGRESS'
             const pct = inProgress ? 100 : (mod.score ?? 0)
-            const barTrackW = 220
-            const barX = 150
-            const w = inProgress ? barTrackW : (pct / 100) * barTrackW
-            const label = mod.title.length > 24 ? `${mod.title.slice(0, 22)}…` : mod.title
-            const display = inProgress ? 'In progress' : `${mod.score}`
 
             return (
-              <g key={mod.id}>
-                <title>{mod.title}</title>
-                <text x={0} y={y + 13} className="fill-stone-600 text-[10px]">
-                  {label}
-                </text>
-                <rect x={barX} y={y} width={barTrackW} height={barH} fill={TRACK} />
-                <rect
-                  x={barX}
-                  y={y}
-                  width={w}
-                  height={barH}
-                  fill={inProgress ? MUTED : ACCENT}
-                  fillOpacity={inProgress ? 0.5 : 1}
-                />
-                <text
-                  x={chartW - 4}
-                  y={y + 13}
-                  textAnchor="end"
-                  className={`text-[10px] ${inProgress ? 'fill-stone-500' : 'fill-stone-800'}`}
+              <div
+                key={mod.id}
+                className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_2.5rem] items-center gap-2 sm:gap-3"
+                title={mod.title}
+              >
+                <p className="truncate text-xs text-stone-600">{mod.title}</p>
+                <div className="h-2 overflow-hidden rounded-sm bg-stone-200">
+                  <div
+                    className={`h-full rounded-sm ${inProgress ? 'bg-stone-400/50' : 'bg-accent'}`}
+                    style={{ width: inProgress ? '100%' : `${pct}%` }}
+                  />
+                </div>
+                <span
+                  className={`text-right text-xs tabular-nums ${
+                    inProgress ? 'text-stone-500' : 'text-stone-800'
+                  }`}
                 >
-                  {display}
-                </text>
-              </g>
+                  {inProgress ? '…' : mod.score}
+                </span>
+              </div>
             )
           })}
-        </svg>
+        </div>
       )}
 
-      <div className="mt-3 flex gap-4 text-xs text-stone-600">
+      <div className="mt-3 flex flex-wrap gap-4 text-[11px] text-stone-600">
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2.5 w-2.5" style={{ backgroundColor: ACCENT }} />
+          <span className="inline-block h-2 w-2 rounded-sm bg-accent" />
           Completed (score)
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2.5 w-2.5" style={{ backgroundColor: MUTED, opacity: 0.5 }} />
+          <span className="inline-block h-2 w-2 rounded-sm bg-stone-400/50" />
           In progress
         </span>
       </div>

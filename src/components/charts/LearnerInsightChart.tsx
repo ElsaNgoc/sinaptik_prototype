@@ -15,9 +15,9 @@ export default function LearnerInsightChart({
   cohortAvgScore,
   cohortAvgEngagement,
 }: LearnerInsightChartProps) {
-  const w = 280
-  const h = 120
-  const pad = { top: 12, right: 16, bottom: 28, left: 36 }
+  const w = 520
+  const h = 180
+  const pad = { top: 16, right: 20, bottom: 32, left: 40 }
   const plotW = w - pad.left - pad.right
   const plotH = h - pad.top - pad.bottom
 
@@ -33,14 +33,9 @@ export default function LearnerInsightChart({
   const totalModules = learner.totalModules
 
   return (
-    <div className="rounded-lg border border-stone-200 bg-stone-50/50 p-4">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h3 className="text-xs font-medium uppercase tracking-wide text-stone-500">
-            Learning snapshot
-          </h3>
-          <p className="mt-0.5 text-sm text-stone-700">Engagement vs performance</p>
-        </div>
+    <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <p className="text-xs text-stone-600">Engagement vs performance</p>
         <div className="text-right">
           <p className="text-xs text-stone-500">Module progress</p>
           <div className="mt-1 flex gap-1">
@@ -64,8 +59,14 @@ export default function LearnerInsightChart({
         </div>
       </div>
 
-      <svg viewBox={`0 0 ${w} ${h}`} className="mt-3 w-full max-w-sm" role="img" aria-label="Engagement vs performance chart">
-        {/* grid */}
+      <svg
+        viewBox={`0 0 ${w} ${h}`}
+        className="mt-3 h-auto w-full"
+        style={{ minHeight: '180px', maxHeight: '240px' }}
+        preserveAspectRatio="xMidYMid meet"
+        role="img"
+        aria-label="Engagement vs performance chart"
+      >
         {[25, 50, 75].map((tick) => (
           <g key={tick}>
             <line
@@ -87,7 +88,6 @@ export default function LearnerInsightChart({
           </g>
         ))}
 
-        {/* cohort average crosshair */}
         <line
           x1={cohortX}
           y1={pad.top}
@@ -106,22 +106,20 @@ export default function LearnerInsightChart({
           strokeWidth={1}
           strokeDasharray="3 3"
         />
-        <circle cx={cohortX} cy={cohortY} r={3} fill="white" stroke={MUTED} strokeWidth={1.5} />
+        <circle cx={cohortX} cy={cohortY} r={4} fill="white" stroke={MUTED} strokeWidth={1.5} />
 
-        {/* learner point */}
-        <circle cx={learnerX} cy={learnerY} r={5} fill={ACCENT} />
-        <circle cx={learnerX} cy={learnerY} r={8} fill={ACCENT} fillOpacity={0.15} />
+        <circle cx={learnerX} cy={learnerY} r={6} fill={ACCENT} />
+        <circle cx={learnerX} cy={learnerY} r={10} fill={ACCENT} fillOpacity={0.15} />
 
-        {/* axis labels */}
-        <text x={pad.left + plotW / 2} y={h - 4} textAnchor="middle" className="fill-stone-500 text-[9px]">
+        <text x={pad.left + plotW / 2} y={h - 6} textAnchor="middle" className="fill-stone-500 text-[10px]">
           Engagement
         </text>
         <text
-          x={10}
+          x={12}
           y={pad.top + plotH / 2}
           textAnchor="middle"
-          transform={`rotate(-90, 10, ${pad.top + plotH / 2})`}
-          className="fill-stone-500 text-[9px]"
+          transform={`rotate(-90, 12, ${pad.top + plotH / 2})`}
+          className="fill-stone-500 text-[10px]"
         >
           Score
         </text>
