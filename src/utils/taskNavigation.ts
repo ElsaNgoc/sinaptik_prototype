@@ -5,6 +5,20 @@ export type ReturnNavigationState = {
   returnLabel?: string
 }
 
+export function tasksPathWithDate(date?: string): string {
+  return date ? `/tasks?date=${date}` : '/tasks'
+}
+
+export function buildTasksReturn(
+  label: string,
+  date?: string
+): ReturnNavigationState {
+  return {
+    returnTo: tasksPathWithDate(date),
+    returnLabel: label,
+  }
+}
+
 export function resolveBackNavigation(
   state: unknown,
   defaultTo: string,
@@ -20,10 +34,8 @@ export function resolveBackNavigation(
 export function useReturnNavigation() {
   const { t } = useLanguage()
   return {
-    tasksReturn: {
-      returnTo: '/tasks',
-      returnLabel: t('back.tasks'),
-    },
+    tasksReturn: buildTasksReturn(t('back.tasks')),
+    tasksReturnForDate: (date: string) => buildTasksReturn(t('back.tasks'), date),
     notificationsReturn: {
       returnTo: '/notifications',
       returnLabel: t('back.inbox'),

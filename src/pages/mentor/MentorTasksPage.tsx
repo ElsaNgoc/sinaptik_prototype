@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { useLanguage } from '../../context/LanguageContext'
 import CollapsibleSection from '../../components/CollapsibleSection'
@@ -39,28 +39,58 @@ function buildMonthGrid(year: number, month: number) {
 
 function taskLabel(
   task: MentorTask,
+  todayIso: string,
   t: (key: string, params?: Record<string, string | number>) => string
 ) {
-  if (task.type === 'REVIEW_REQUEST') {
-    return t('tasks.reviewRequested', {
-      name: task.learnerName,
-      assignment: task.assignmentTitle,
-      module: task.moduleTitle,
-    })
-  }
-  return t('tasks.submitted', {
+  const params = {
     name: task.learnerName,
     assignment: task.assignmentTitle,
     module: task.moduleTitle,
-  })
+  }
+
+  if (task.type === 'REVIEW_REQUEST') {
+    return t('tasks.reviewRequested', params)
+  }
+
+  if (task.dueDate > todayIso) {
+    return t('tasks.willSubmit', params)
+  }
+
+  if (task.submittedAt) {
+    return t('tasks.submitted', params)
+  }
+
+  return t('tasks.notCompleted', params)
+}
+
+function parseDateParam(param: string | null): string {
+  if (param && /^\d{4}-\d{2}-\d{2}$/.test(param)) return param
+  return TODAY_ISO
+}
+
+function dateParts(iso: string) {
+  const d = new Date(iso + 'T12:00:00')
+  return { year: d.getFullYear(), month: d.getMonth() }
 }
 
 export default function MentorTasksPage() {
   const { tasks } = useApp()
   const { t, dateLocale } = useLanguage()
-  const [viewYear, setViewYear] = useState(2026)
-  const [viewMonth, setViewMonth] = useState(6)
-  const [selectedDate, setSelectedDate] = useState(TODAY_ISO)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const selectedDate = parseDateParam(searchParams.get('date'))
+  const initialParts = dateParts(selectedDate)
+  const [viewYear, setViewYear] = useState(initialParts.year)
+  const [viewMonth, setViewMonth] = useState(initialParts.month)
+
+  useEffect(() => {
+    const { year, month } = dateParts(selectedDate)
+    setViewYear(year)
+    setViewMonth(month)
+  }, [selectedDate])
+
+  const selectDate = (iso: string) => {
+    setSearchParams({ date: iso }, { replace: true })
+  }
 
   const dayStatusByDate = useMemo(() => getCalendarDayStatus(tasks, TODAY_ISO), [tasks])
   const dayTasks = useMemo(() => getTasksForDate(tasks, selectedDate), [tasks, selectedDate])
@@ -139,7 +169,7 @@ export default function MentorTasksPage() {
                   <button
                     key={iso}
                     type="button"
-                    onClick={() => setSelectedDate(iso)}
+                    onClick={() => selectDate(iso)}
                     className={`relative flex h-9 flex-col items-center justify-center rounded-full text-sm transition ${
                       selected
                         ? 'bg-stone-800 font-semibold text-white'
@@ -218,7 +248,7 @@ export default function MentorTasksPage() {
                             >
                               <ul className="space-y-2">
                                 {mod.tasks.map((task) => (
-                                  <TaskRow key={task.id} task={task} />
+                                  <TaskRow key={task.id} task={task} selectedDate={selectedDate} />
                                 ))}
                               </ul>
                             </CollapsibleSection>
@@ -242,7 +272,7 @@ export default function MentorTasksPage() {
                       >
                         <ul className="space-y-2">
                           {reviewTasks.map((task) => (
-                            <TaskRow key={task.id} task={task} />
+                            <TaskRow key={task.id} task={task} selectedDate={selectedDate} />
                           ))}
                         </ul>
                       </CollapsibleSection>
@@ -258,11 +288,14 @@ export default function MentorTasksPage() {
   )
 }
 
-function TaskRow({ task }: { task: MentorTask }) {
+function TaskRow({ task, selectedDate }: { task: MentorTask; selectedDate: string }) {
   const { toggleTaskStatus } = useApp()
   const { t } = useLanguage()
-  const { tasksReturn } = useReturnNavigation()
+  const { tasksReturnForDate } = useReturnNavigation()
   const done = task.status === 'COMPLETED'
+  const isReminder =
+    task.type === 'SUBMISSION' && task.dueDate > TODAY_ISO && task.status === 'PENDING'
+  const tasksReturn = tasksReturnForDate(selectedDate)
 
   return (
     <li className="flex items-start gap-3 text-sm">
@@ -278,15 +311,17 @@ function TaskRow({ task }: { task: MentorTask }) {
         {done ? '✕' : ''}
       </button>
       <span className={`min-w-0 flex-1 ${done ? 'text-stone-500 line-through' : 'text-stone-800'}`}>
-        {taskLabel(task, t)}
+        {taskLabel(task, TODAY_ISO, t)}
       </span>
-      <Link
-        to={getTaskRoute(task)}
-        state={tasksReturn}
-        className="shrink-0 text-accent hover:underline"
-      >
-        {t('tasks.view')}
-      </Link>
+      {!isReminder && (
+        <Link
+          to={getTaskRoute(task)}
+          state={tasksReturn}
+          className="shrink-0 text-accent hover:underline"
+        >
+          {t('tasks.view')}
+        </Link>
+      )}
     </li>
   )
 }

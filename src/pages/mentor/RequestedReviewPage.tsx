@@ -93,13 +93,23 @@ export default function RequestedReviewPage() {
     const reviewResponse =
       general?.text ?? comments[0]?.text ?? t('review.resolvedNote')
     resolveReviewRequest(request.id, reviewResponse)
-    navigate('/tasks')
+    const returnNav = resolveBackNavigation(
+      location.state,
+      tasksReturn.returnTo!,
+      tasksReturn.returnLabel!
+    )
+    navigate(returnNav.to)
   }
 
   if (!request || !submission || !learner) {
+    const returnNav = resolveBackNavigation(
+      location.state,
+      tasksReturn.returnTo!,
+      tasksReturn.returnLabel!
+    )
     return (
       <div>
-        <BackButton to={tasksReturn.returnTo} label={tasksReturn.returnLabel} />
+        <BackButton to={returnNav.to} label={returnNav.label} />
         <p className="mt-4 text-stone-500">{t('review.notFound')}</p>
       </div>
     )

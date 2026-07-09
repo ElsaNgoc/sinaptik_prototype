@@ -459,13 +459,23 @@ export default function MarkingPage() {
 
     resolveSubmission(learner.id)
     completeTaskBySubmission(submission.id)
-    navigate('/tasks')
+    const returnNav = resolveBackNavigation(
+      location.state,
+      tasksReturn.returnTo!,
+      tasksReturn.returnLabel!
+    )
+    navigate(returnNav.to)
   }
 
   if (!submission || !learner || !quiz) {
+    const returnNav = resolveBackNavigation(
+      location.state,
+      tasksReturn.returnTo!,
+      tasksReturn.returnLabel!
+    )
     return (
       <div>
-        <BackButton to={tasksReturn.returnTo} label={tasksReturn.returnLabel} />
+        <BackButton to={returnNav.to} label={returnNav.label} />
         <p className="mt-4 text-stone-500">{t('marking.notFound')}</p>
       </div>
     )

@@ -8,7 +8,7 @@ import {
   formatRelativeTime,
 } from '../../utils/dashboard'
 import { getMentorDashboardKpis, getTaskRoute } from '../../utils/mockDataHelpers'
-import { useReturnNavigation } from '../../utils/taskNavigation'
+import { useReturnNavigation, type ReturnNavigationState } from '../../utils/taskNavigation'
 import StatCard from '../../components/StatCard'
 import StatusBadge from '../../components/StatusBadge'
 import PageTitleWithIcon from '../../components/PageTitleWithIcon'
@@ -180,7 +180,7 @@ function WorkRow({
 }: {
   task: MentorTask
   learner?: Learner
-  tasksReturn: { returnTo: string; returnLabel: string }
+  tasksReturn: ReturnNavigationState
   t: (key: string) => string
 }) {
   const isReview = task.type === 'REVIEW_REQUEST'

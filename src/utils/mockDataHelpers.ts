@@ -44,9 +44,9 @@ export type CalendarDayStatus = 'complete' | 'due' | 'upcoming'
 
 /**
  * Per-day calendar dot:
- * - complete: all tasks done
- * - due: has pending task on/before today (needs attention now)
- * - upcoming: has pending task in the future (not yet actionable)
+ * - complete: all tasks on that date are done
+ * - due: has pending task on/before today
+ * - upcoming: has pending task on a future date (mentor reminder)
  */
 export function getCalendarDayStatus(tasks: MentorTask[], todayIso: string) {
   const byDate = new Map<string, { pending: number; total: number }>()
